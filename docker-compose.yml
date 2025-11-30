@@ -1,0 +1,29 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb-flight-booking
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - flight-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-flight-booking
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - flight-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  flight-network:
+    driver: bridge

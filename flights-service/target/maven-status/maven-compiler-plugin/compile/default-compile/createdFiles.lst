@@ -1,0 +1,10 @@
+com/flightapp/flights/FlightsServiceApplication.class
+com/flightapp/flights/service/FlightService.class
+com/flightapp/flights/exception/InsufficientSeatsException.class
+com/flightapp/flights/model/Flight$TripType.class
+com/flightapp/flights/repository/FlightRepository.class
+com/flightapp/flights/controller/FlightController.class
+com/flightapp/flights/model/Flight.class
+com/flightapp/flights/exception/GlobalExceptionHandler.class
+com/flightapp/flights/dto/FlightSearchRequest.class
+com/flightapp/flights/exception/FlightNotFoundException.class
