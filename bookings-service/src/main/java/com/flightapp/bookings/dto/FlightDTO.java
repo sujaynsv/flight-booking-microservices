@@ -105,7 +105,7 @@ public class FlightDTO {
         return availableSeats;
     }
     
-    public void setAvailableSeats(Integer availableSeats) {  // FIXED: Changed from String to Integer
+    public void setAvailableSeats(Integer availableSeats) { 
         this.availableSeats = availableSeats;
     }
     

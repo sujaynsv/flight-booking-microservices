@@ -31,7 +31,6 @@ public class EmailService {
                 log.info("Queue name: {}", emailQueue);
                 log.info("Notification: {}", notification);
                 
-                // Set message to be persistent
                 MessagePostProcessor messagePostProcessor = message -> {
                     MessageProperties props = message.getMessageProperties();
                     props.setDeliveryMode(MessageProperties.DEFAULT_DELIVERY_MODE);
@@ -39,7 +38,6 @@ public class EmailService {
                     return message;
                 };
                 
-                // Send to default exchange with routing key = queue name
                 rabbitTemplate.convertAndSend("", emailQueue, notification, messagePostProcessor);
                 
                 log.info("=== Email sent successfully! ===");
