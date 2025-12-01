@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Airline.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">flights-service</a> &gt; <a href="index.source.html" class="el_package">com.flightapp.flights.model</a> &gt; <span class="el_source">Airline.java</span></div><h1>Airline.java</h1><pre class="source lang-java linenums">package com.flightapp.flights.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
+
+@Document(collection = &quot;airlines&quot;)
+public class Airline {
+    
+    @Id
+    private String id;
+    private String airlineName;
+    private String airlineCode;
+    private String contactEmail;
+    private String contactPhone;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    
+<span class="fc" id="L20">    public Airline() {</span>
+<span class="fc" id="L21">        this.createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L22">        this.updatedAt = LocalDateTime.now();</span>
+<span class="fc" id="L23">    }</span>
+    
+    // Getters and Setters
+    public String getId() {
+<span class="fc" id="L27">        return id;</span>
+    }
+    
+    public void setId(String id) {
+<span class="fc" id="L31">        this.id = id;</span>
+<span class="fc" id="L32">    }</span>
+    
+    public String getAirlineName() {
+<span class="fc" id="L35">        return airlineName;</span>
+    }
+    
+    public void setAirlineName(String airlineName) {
+<span class="fc" id="L39">        this.airlineName = airlineName;</span>
+<span class="fc" id="L40">    }</span>
+    
+    public String getAirlineCode() {
+<span class="fc" id="L43">        return airlineCode;</span>
+    }
+    
+    public void setAirlineCode(String airlineCode) {
+<span class="fc" id="L47">        this.airlineCode = airlineCode;</span>
+<span class="fc" id="L48">    }</span>
+    
+    public String getContactEmail() {
+<span class="fc" id="L51">        return contactEmail;</span>
+    }
+    
+    public void setContactEmail(String contactEmail) {
+<span class="fc" id="L55">        this.contactEmail = contactEmail;</span>
+<span class="fc" id="L56">    }</span>
+    
+    public String getContactPhone() {
+<span class="fc" id="L59">        return contactPhone;</span>
+    }
+    
+    public void setContactPhone(String contactPhone) {
+<span class="fc" id="L63">        this.contactPhone = contactPhone;</span>
+<span class="fc" id="L64">    }</span>
+    
+    public LocalDateTime getCreatedAt() {
+<span class="nc" id="L67">        return createdAt;</span>
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+<span class="fc" id="L71">        this.createdAt = createdAt;</span>
+<span class="fc" id="L72">    }</span>
+    
+    public LocalDateTime getUpdatedAt() {
+<span class="nc" id="L75">        return updatedAt;</span>
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+<span class="fc" id="L79">        this.updatedAt = updatedAt;</span>
+<span class="fc" id="L80">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

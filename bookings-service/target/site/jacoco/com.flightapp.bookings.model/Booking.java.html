@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Booking.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bookings-service</a> &gt; <a href="index.source.html" class="el_package">com.flightapp.bookings.model</a> &gt; <span class="el_source">Booking.java</span></div><h1>Booking.java</h1><pre class="source lang-java linenums">package com.flightapp.bookings.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Document(collection = &quot;bookings&quot;)
+public class Booking {
+    @Id
+    private String id;
+    private String pnr;
+    private String flightId;
+    private String email;
+    private String name;
+    private Integer numberOfSeats;
+    private List&lt;Passenger&gt; passengers;
+    private List&lt;String&gt; seatNumbers;
+    private Double totalPrice;
+    private BookingStatus status;
+    private LocalDateTime bookingDateTime;
+    private LocalDateTime journeyDate;
+    
+<span class="fc" id="L25">    public enum BookingStatus {</span>
+<span class="fc" id="L26">        CONFIRMED, CANCELLED</span>
+    }
+    
+    // Constructors
+<span class="fc" id="L30">    public Booking() {</span>
+<span class="fc" id="L31">    }</span>
+    
+    // Getters and Setters
+    public String getId() {
+<span class="fc" id="L35">        return id;</span>
+    }
+    
+    public void setId(String id) {
+<span class="fc" id="L39">        this.id = id;</span>
+<span class="fc" id="L40">    }</span>
+    
+    public String getPnr() {
+<span class="fc" id="L43">        return pnr;</span>
+    }
+    
+    public void setPnr(String pnr) {
+<span class="fc" id="L47">        this.pnr = pnr;</span>
+<span class="fc" id="L48">    }</span>
+    
+    public String getFlightId() {
+<span class="fc" id="L51">        return flightId;</span>
+    }
+    
+    public void setFlightId(String flightId) {
+<span class="fc" id="L55">        this.flightId = flightId;</span>
+<span class="fc" id="L56">    }</span>
+    
+    public String getEmail() {
+<span class="fc" id="L59">        return email;</span>
+    }
+    
+    public void setEmail(String email) {
+<span class="fc" id="L63">        this.email = email;</span>
+<span class="fc" id="L64">    }</span>
+    
+    public String getName() {
+<span class="fc" id="L67">        return name;</span>
+    }
+    
+    public void setName(String name) {
+<span class="fc" id="L71">        this.name = name;</span>
+<span class="fc" id="L72">    }</span>
+    
+    public Integer getNumberOfSeats() {
+<span class="fc" id="L75">        return numberOfSeats;</span>
+    }
+    
+    public void setNumberOfSeats(Integer numberOfSeats) {
+<span class="fc" id="L79">        this.numberOfSeats = numberOfSeats;</span>
+<span class="fc" id="L80">    }</span>
+    
+    public List&lt;Passenger&gt; getPassengers() {
+<span class="fc" id="L83">        return passengers;</span>
+    }
+    
+    public void setPassengers(List&lt;Passenger&gt; passengers) {
+<span class="fc" id="L87">        this.passengers = passengers;</span>
+<span class="fc" id="L88">    }</span>
+    
+    public List&lt;String&gt; getSeatNumbers() {
+<span class="fc" id="L91">        return seatNumbers;</span>
+    }
+    
+    public void setSeatNumbers(List&lt;String&gt; seatNumbers) {
+<span class="fc" id="L95">        this.seatNumbers = seatNumbers;</span>
+<span class="fc" id="L96">    }</span>
+    
+    public Double getTotalPrice() {
+<span class="fc" id="L99">        return totalPrice;</span>
+    }
+    
+    public void setTotalPrice(Double totalPrice) {
+<span class="fc" id="L103">        this.totalPrice = totalPrice;</span>
+<span class="fc" id="L104">    }</span>
+    
+    public BookingStatus getStatus() {
+<span class="fc" id="L107">        return status;</span>
+    }
+    
+    public void setStatus(BookingStatus status) {
+<span class="fc" id="L111">        this.status = status;</span>
+<span class="fc" id="L112">    }</span>
+    
+    public LocalDateTime getBookingDateTime() {
+<span class="fc" id="L115">        return bookingDateTime;</span>
+    }
+    
+    public void setBookingDateTime(LocalDateTime bookingDateTime) {
+<span class="fc" id="L119">        this.bookingDateTime = bookingDateTime;</span>
+<span class="fc" id="L120">    }</span>
+    
+    public LocalDateTime getJourneyDate() {
+<span class="fc" id="L123">        return journeyDate;</span>
+    }
+    
+    public void setJourneyDate(LocalDateTime journeyDate) {
+<span class="fc" id="L127">        this.journeyDate = journeyDate;</span>
+<span class="fc" id="L128">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

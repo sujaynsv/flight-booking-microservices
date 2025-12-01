@@ -1,0 +1,9 @@
+com/flightapp/bookings/model/PassengerTest.class
+com/flightapp/bookings/service/BookingServiceTest.class
+com/flightapp/bookings/service/EmailServiceTest.class
+com/flightapp/bookings/BookingsServiceApplicationTests.class
+com/flightapp/bookings/model/BookingTest.class
+com/flightapp/bookings/dto/BookingRequestTest.class
+com/flightapp/bookings/dto/FlightDTOTest.class
+com/flightapp/bookings/controller/BookingControllerTest.class
+com/flightapp/bookings/exception/GlobalExceptionHandlerTest.class

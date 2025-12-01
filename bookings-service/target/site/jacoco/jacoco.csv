@@ -1,0 +1,12 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+bookings-service,com.flightapp.bookings.model,Passenger,0,46,0,0,0,20,0,10,0,10
+bookings-service,com.flightapp.bookings.model,Booking,0,87,0,0,0,38,0,25,0,25
+bookings-service,com.flightapp.bookings.model,Booking.BookingStatus,0,15,0,0,0,2,0,1,0,1
+bookings-service,com.flightapp.bookings.controller,BookingController,0,41,0,0,0,11,0,6,0,6
+bookings-service,com.flightapp.bookings.service,EmailService,25,42,0,0,8,13,1,4,1,4
+bookings-service,com.flightapp.bookings.service,BookingService,208,89,0,2,42,21,9,8,9,7
+bookings-service,com.flightapp.bookings.dto,BookingRequest,0,56,0,0,0,24,0,12,0,12
+bookings-service,com.flightapp.bookings.dto,FlightDTO,0,87,0,0,0,38,0,25,0,25
+bookings-service,com.flightapp.bookings.exception,BookingNotFoundException,0,4,0,0,0,2,0,1,0,1
+bookings-service,com.flightapp.bookings.exception,CancellationNotAllowedException,0,4,0,0,0,2,0,1,0,1
+bookings-service,com.flightapp.bookings.exception,GlobalExceptionHandler,0,84,0,0,0,16,0,8,0,8

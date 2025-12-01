@@ -15,5 +15,4 @@ com/flightapp/bookings/config/WebClientConfig.class
 com/flightapp/bookings/service/BookingService.class
 com/flightapp/bookings/client/FlightsClient.class
 com/flightapp/bookings/config/Resilience4jConfig.class
-com/flightapp/bookings/consumer/EmailConsumer.class
 com/flightapp/bookings/exception/GlobalExceptionHandler.class

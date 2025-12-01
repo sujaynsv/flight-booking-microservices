@@ -25,6 +25,9 @@
         <maven.compiler.target>17</maven.compiler.target>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	    <jacoco.version>0.8.11</jacoco.version>
+	    <sonar.organization>sujaynsv</sonar.organization>
+	    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <modules>
@@ -65,6 +68,11 @@
                         <target>17</target>
                     </configuration>
                 </plugin>
+                <plugin>
+		            <groupId>org.jacoco</groupId>
+		            <artifactId>jacoco-maven-plugin</artifactId>
+		            <version>${jacoco.version}</version>
+		        </plugin>
             </plugins>
         </pluginManagement>
     </build>

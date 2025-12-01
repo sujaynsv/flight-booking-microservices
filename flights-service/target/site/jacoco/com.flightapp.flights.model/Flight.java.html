@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Flight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">flights-service</a> &gt; <a href="index.source.html" class="el_package">com.flightapp.flights.model</a> &gt; <span class="el_source">Flight.java</span></div><h1>Flight.java</h1><pre class="source lang-java linenums">package com.flightapp.flights.model;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
+
+@Document(collection = &quot;flights&quot;)
+public class Flight {
+    
+    @Id
+    private String id;
+    private String airlineId;
+    private String airlineName;
+    private String flightNumber;
+    private String fromPlace;
+    private String toPlace;
+    private LocalDateTime departureDateTime;
+    private LocalDateTime arrivalDateTime;
+    private Double price;
+    private Integer totalSeats;
+    private Integer availableSeats;
+    private String tripType;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    
+<span class="fc" id="L27">    public Flight() {</span>
+<span class="fc" id="L28">        this.createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L29">        this.updatedAt = LocalDateTime.now();</span>
+<span class="fc" id="L30">    }</span>
+    
+    // Getters and Setters
+    public String getId() {
+<span class="fc" id="L34">        return id;</span>
+    }
+    
+    public void setId(String id) {
+<span class="fc" id="L38">        this.id = id;</span>
+<span class="fc" id="L39">    }</span>
+    
+    public String getAirlineId() {
+<span class="fc" id="L42">        return airlineId;</span>
+    }
+    
+    public void setAirlineId(String airlineId) {
+<span class="fc" id="L46">        this.airlineId = airlineId;</span>
+<span class="fc" id="L47">    }</span>
+    
+    public String getAirlineName() {
+<span class="nc" id="L50">        return airlineName;</span>
+    }
+    
+    public void setAirlineName(String airlineName) {
+<span class="nc" id="L54">        this.airlineName = airlineName;</span>
+<span class="nc" id="L55">    }</span>
+    
+    public String getFlightNumber() {
+<span class="fc" id="L58">        return flightNumber;</span>
+    }
+    
+    public void setFlightNumber(String flightNumber) {
+<span class="fc" id="L62">        this.flightNumber = flightNumber;</span>
+<span class="fc" id="L63">    }</span>
+    
+    public String getFromPlace() {
+<span class="fc" id="L66">        return fromPlace;</span>
+    }
+    
+    public void setFromPlace(String fromPlace) {
+<span class="fc" id="L70">        this.fromPlace = fromPlace;</span>
+<span class="fc" id="L71">    }</span>
+    
+    public String getToPlace() {
+<span class="fc" id="L74">        return toPlace;</span>
+    }
+    
+    public void setToPlace(String toPlace) {
+<span class="fc" id="L78">        this.toPlace = toPlace;</span>
+<span class="fc" id="L79">    }</span>
+    
+    public LocalDateTime getDepartureDateTime() {
+<span class="fc" id="L82">        return departureDateTime;</span>
+    }
+    
+    public void setDepartureDateTime(LocalDateTime departureDateTime) {
+<span class="fc" id="L86">        this.departureDateTime = departureDateTime;</span>
+<span class="fc" id="L87">    }</span>
+    
+    public LocalDateTime getArrivalDateTime() {
+<span class="fc" id="L90">        return arrivalDateTime;</span>
+    }
+    
+    public void setArrivalDateTime(LocalDateTime arrivalDateTime) {
+<span class="fc" id="L94">        this.arrivalDateTime = arrivalDateTime;</span>
+<span class="fc" id="L95">    }</span>
+    
+    public Double getPrice() {
+<span class="fc" id="L98">        return price;</span>
+    }
+    
+    public void setPrice(Double price) {
+<span class="fc" id="L102">        this.price = price;</span>
+<span class="fc" id="L103">    }</span>
+    
+    public Integer getTotalSeats() {
+<span class="fc" id="L106">        return totalSeats;</span>
+    }
+    
+    public void setTotalSeats(Integer totalSeats) {
+<span class="fc" id="L110">        this.totalSeats = totalSeats;</span>
+<span class="fc" id="L111">    }</span>
+    
+    public Integer getAvailableSeats() {
+<span class="fc" id="L114">        return availableSeats;</span>
+    }
+    
+    public void setAvailableSeats(Integer availableSeats) {
+<span class="fc" id="L118">        this.availableSeats = availableSeats;</span>
+<span class="fc" id="L119">    }</span>
+    
+    public String getTripType() {
+<span class="nc" id="L122">        return tripType;</span>
+    }
+    
+    public void setTripType(String tripType) {
+<span class="nc" id="L126">        this.tripType = tripType;</span>
+<span class="nc" id="L127">    }</span>
+    
+    public LocalDateTime getCreatedAt() {
+<span class="fc" id="L130">        return createdAt;</span>
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+<span class="fc" id="L134">        this.createdAt = createdAt;</span>
+<span class="fc" id="L135">    }</span>
+    
+    public LocalDateTime getUpdatedAt() {
+<span class="fc" id="L138">        return updatedAt;</span>
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+<span class="fc" id="L142">        this.updatedAt = updatedAt;</span>
+<span class="fc" id="L143">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
