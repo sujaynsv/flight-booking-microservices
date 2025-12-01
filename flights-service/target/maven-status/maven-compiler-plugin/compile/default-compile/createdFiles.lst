@@ -1,10 +1,13 @@
+com/flightapp/flights/exception/InsufficientSeatsException.class
+com/flightapp/flights/service/AirlineService.class
+com/flightapp/flights/model/Airline.class
+com/flightapp/flights/controller/AirlineController.class
+com/flightapp/flights/exception/GlobalExceptionHandler.class
+com/flightapp/flights/dto/FlightSearchRequest.class
+com/flightapp/flights/repository/AirlineRepository.class
 com/flightapp/flights/FlightsServiceApplication.class
 com/flightapp/flights/service/FlightService.class
-com/flightapp/flights/exception/InsufficientSeatsException.class
-com/flightapp/flights/model/Flight$TripType.class
 com/flightapp/flights/repository/FlightRepository.class
 com/flightapp/flights/controller/FlightController.class
 com/flightapp/flights/model/Flight.class
-com/flightapp/flights/exception/GlobalExceptionHandler.class
-com/flightapp/flights/dto/FlightSearchRequest.class
 com/flightapp/flights/exception/FlightNotFoundException.class

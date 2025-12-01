@@ -3,14 +3,16 @@ package com.flightapp.flights.controller;
 import com.flightapp.flights.dto.FlightSearchRequest;
 import com.flightapp.flights.model.Flight;
 import com.flightapp.flights.service.FlightService;
-// import jakarta.validation.Valid;  // COMMENT THIS OUT
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/v1.0/flight")
+@RequestMapping("/flight")
 public class FlightController {
     
     private final FlightService flightService;
@@ -20,26 +22,36 @@ public class FlightController {
     }
     
     @PostMapping("/airline/inventory")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Flight> addFlight(@RequestBody Flight flight) {  // REMOVED @Valid
-        System.out.println("========== CONTROLLER HIT! ==========");
-        System.out.println("Received flight: " + flight);
-        return flightService.addFlight(flight);
+    public Mono<ResponseEntity<Map<String, String>>> addFlight(@RequestBody Flight flight) {
+        return flightService.addFlight(flight)
+                .map(saved -> ResponseEntity
+                        .status(HttpStatus.OK)
+                        .body(Map.of("flightId", saved.getId())));
     }
     
     @PostMapping("/search")
-    public Flux<Flight> searchFlights(@RequestBody FlightSearchRequest searchRequest) {  // REMOVED @Valid
+    public Flux<Flight> searchFlights(@RequestBody FlightSearchRequest searchRequest) {
         return flightService.searchFlights(searchRequest);
     }
     
-    @GetMapping("/airline/{id}")
+    @GetMapping("/{id}")
     public Mono<Flight> getFlightById(@PathVariable String id) {
         return flightService.getFlightById(id);
     }
     
-    @PutMapping("/airline/{id}/seats")
-    public Mono<Flight> updateSeats(@PathVariable String id, 
-                                     @RequestParam Integer seatsToBook) {
-        return flightService.updateAvailableSeats(id, seatsToBook);
+    @PutMapping("/{id}/seats")
+    public Mono<ResponseEntity<Map<String, String>>> updateSeats(
+            @PathVariable String id, 
+            @RequestParam Integer seats) {
+        return flightService.updateSeats(id, seats)
+                .map(updated -> ResponseEntity
+                        .status(HttpStatus.OK)
+                        .body(Map.of("flightId", updated.getId())));
+    }
+    
+    @DeleteMapping("/{id}")
+    public Mono<ResponseEntity<Void>> deleteFlight(@PathVariable String id) {
+        return flightService.deleteFlight(id)
+                .then(Mono.just(ResponseEntity.ok().<Void>build()));
     }
 }

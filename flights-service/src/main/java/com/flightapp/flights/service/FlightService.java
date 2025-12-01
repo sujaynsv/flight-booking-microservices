@@ -1,8 +1,6 @@
 package com.flightapp.flights.service;
 
 import com.flightapp.flights.dto.FlightSearchRequest;
-import com.flightapp.flights.exception.FlightNotFoundException;
-import com.flightapp.flights.exception.InsufficientSeatsException;
 import com.flightapp.flights.model.Flight;
 import com.flightapp.flights.repository.FlightRepository;
 import org.slf4j.Logger;
@@ -12,7 +10,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 @Service
 public class FlightService {
@@ -26,45 +23,56 @@ public class FlightService {
     }
     
     public Mono<Flight> addFlight(Flight flight) {
-        if (flight.getBookedSeats() == null) {
-            flight.setBookedSeats(new ArrayList<>());
-        }
+        log.info("Adding new flight: {}", flight.getFlightNumber());
+        flight.setCreatedAt(LocalDateTime.now());
+        flight.setUpdatedAt(LocalDateTime.now());
         flight.setAvailableSeats(flight.getTotalSeats());
-        return flightRepository.save(flight)
-                .doOnSuccess(f -> log.info("Flight added successfully with ID: {}", f.getId()));
+        return flightRepository.save(flight);
     }
     
-    public Flux<Flight> searchFlights(FlightSearchRequest request) {
-        LocalDateTime startDate = request.getDepartureDate().atStartOfDay();
-        LocalDateTime endDate = startDate.plusDays(1);
+    public Flux<Flight> searchFlights(FlightSearchRequest searchRequest) {
+        log.info("Searching flights from {} to {} on {}", 
+                searchRequest.getFromPlace(), 
+                searchRequest.getToPlace(), 
+                searchRequest.getDepartureDate());
         
         return flightRepository.findByFromPlaceAndToPlaceAndDepartureDateTimeBetween(
-                request.getFromPlace(),
-                request.getToPlace(),
-                startDate,
-                endDate
-        ).filter(flight -> flight.getAvailableSeats() > 0)
-         .doOnComplete(() -> log.info("Flight search completed for {} to {}", 
-                 request.getFromPlace(), request.getToPlace()));
+                searchRequest.getFromPlace(),
+                searchRequest.getToPlace(),
+                searchRequest.getDepartureDate().atStartOfDay(),
+                searchRequest.getDepartureDate().atTime(23, 59, 59)
+        );
     }
     
     public Mono<Flight> getFlightById(String id) {
+        log.info("Fetching flight with ID: {}", id);
         return flightRepository.findById(id)
-                .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found with ID: " + id)));
+                .switchIfEmpty(Mono.error(new RuntimeException("Flight not found with ID: " + id)));
     }
     
-    public Mono<Flight> updateAvailableSeats(String flightId, Integer seatsToBook) {
-        return flightRepository.findById(flightId)
-                .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found with ID: " + flightId)))
+    public Mono<Flight> updateSeats(String id, Integer seatsToBook) {
+        log.info("Updating seats for flight: {}", id);
+        
+        return flightRepository.findById(id)
                 .flatMap(flight -> {
                     if (flight.getAvailableSeats() < seatsToBook) {
-                        return Mono.error(new InsufficientSeatsException(
+                        return Mono.error(new RuntimeException(
                                 "Not enough seats available. Available: " + flight.getAvailableSeats()));
                     }
+                    
                     flight.setAvailableSeats(flight.getAvailableSeats() - seatsToBook);
+                    flight.setUpdatedAt(LocalDateTime.now());
                     return flightRepository.save(flight);
                 })
-                .doOnSuccess(f -> log.info("Updated seats for flight: {}. New available seats: {}", 
-                        flightId, f.getAvailableSeats()));
+                .switchIfEmpty(Mono.error(new RuntimeException("Flight not found with ID: " + id)));
+    }
+    
+    public Mono<Void> deleteFlight(String id) {
+        log.info("Deleting flight with ID: {}", id);
+        return flightRepository.deleteById(id);
+    }
+    
+    public Flux<Flight> getAllFlights() {
+        return flightRepository.findAll();
     }
 }
