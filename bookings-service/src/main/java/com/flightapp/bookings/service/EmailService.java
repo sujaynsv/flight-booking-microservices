@@ -27,7 +27,7 @@ public class EmailService {
     public Mono<Void> sendEmail(EmailNotification notification) {
         return Mono.fromRunnable(() -> {
             try {
-                log.info("=== Sending Email to Queue ===");
+                log.info("Sending Email to Queue");
                 log.info("Queue name: {}", emailQueue);
                 log.info("Notification: {}", notification);
                 
@@ -40,10 +40,10 @@ public class EmailService {
                 
                 rabbitTemplate.convertAndSend("", emailQueue, notification, messagePostProcessor);
                 
-                log.info("=== Email sent successfully! ===");
+                log.info("Email sent successfully");
                 
             } catch (Exception e) {
-                log.error("=== Failed to send email! ===");
+                log.error("Failed to send email");
                 log.error("Error: {}", e.getMessage());
                 log.error("Stack trace:", e);
             }

@@ -44,13 +44,13 @@ public class BookingService {
         log.info("Creating booking for flight: {}", flightId);
         
         return circuitBreaker.run(
-            // Main logic
+
             flightsClient.getFlightById(flightId)
                 .flatMap(flight -> {
-                    // Update flight seats
+
                     return flightsClient.updateSeats(flightId, request.getNumberOfSeats())
                             .flatMap(updatedFlight -> {
-                                // Create booking
+
                                 Booking booking = new Booking();
                                 booking.setPnr(generatePNR());
                                 booking.setFlightId(flightId);
@@ -67,17 +67,15 @@ public class BookingService {
                                 return bookingRepository.save(booking)
                                         .doOnSuccess(b -> {
                                             log.info("Booking created successfully with PNR: {}", b.getPnr());
-                                            // Send email notification asynchronously
                                             sendBookingEmail(b, flight).subscribe();
                                         });
                             });
                 }),
-            // Fallback
+            
             throwable -> createBookingFallback(flightId, request, throwable)
         );
     }
     
-    // FALLBACK METHOD - Called when circuit breaker opens
     private Mono<Booking> createBookingFallback(String flightId, BookingRequest request, Throwable ex) {
     			log.error("circuit breaker trigerred");
         
