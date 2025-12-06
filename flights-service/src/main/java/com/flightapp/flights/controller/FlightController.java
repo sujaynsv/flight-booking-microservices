@@ -25,7 +25,7 @@ public class FlightController {
     public Mono<ResponseEntity<Map<String, String>>> addFlight(@RequestBody Flight flight) {
         return flightService.addFlight(flight)
                 .map(saved -> ResponseEntity
-                        .status(HttpStatus.OK)
+                        .status(HttpStatus.CREATED)
                         .body(Map.of("flightId", saved.getId())));
     }
     
@@ -52,6 +52,6 @@ public class FlightController {
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> deleteFlight(@PathVariable String id) {
         return flightService.deleteFlight(id)
-                .then(Mono.just(ResponseEntity.ok().<Void>build()));
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()));
     }
 }

@@ -27,7 +27,7 @@ public class BookingController {
             @RequestBody BookingRequest request) {
         return bookingService.createBooking(flightId, request)
                 .map(booking -> ResponseEntity
-                        .status(HttpStatus.OK)
+                        .status(HttpStatus.CREATED)
                         .body(Map.of("pnr", booking.getPnr())));
     }
     
@@ -44,6 +44,6 @@ public class BookingController {
     @DeleteMapping("/booking/cancel/{pnr}")
     public Mono<ResponseEntity<Void>> cancelBooking(@PathVariable String pnr) {
         return bookingService.cancelBooking(pnr)
-                .then(Mono.just(ResponseEntity.ok().<Void>build()));
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()));
     }
 }

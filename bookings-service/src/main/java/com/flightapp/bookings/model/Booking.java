@@ -3,6 +3,8 @@ package com.flightapp.bookings.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.ZonedDateTime;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,6 +14,16 @@ public class Booking {
     private String id;
     private String pnr;
     private String flightId;
+    public ZonedDateTime getJourneyDateTime() {
+		return journeyDateTime;
+	}
+
+	public void setJourneyDateTime(ZonedDateTime journeyDateTime) {
+		this.journeyDateTime = journeyDateTime;
+	}
+
+	private ZonedDateTime journeyDateTime;
+    
     private String email;
     private String name;
     private Integer numberOfSeats;

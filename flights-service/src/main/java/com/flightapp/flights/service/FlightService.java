@@ -1,15 +1,17 @@
 package com.flightapp.flights.service;
 
 import com.flightapp.flights.dto.FlightSearchRequest;
+import com.flightapp.flights.exception.FlightNotFoundException;
 import com.flightapp.flights.model.Flight;
 import com.flightapp.flights.repository.FlightRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
 
 @Service
 public class FlightService {
@@ -22,57 +24,60 @@ public class FlightService {
         this.flightRepository = flightRepository;
     }
     
+    @CachePut(value = "flights", key = "#result.id")
+    @CacheEvict(value = "flights", key = "'all'")
     public Mono<Flight> addFlight(Flight flight) {
-        log.info("Adding new flight: {}", flight.getFlightNumber());
-        flight.setCreatedAt(LocalDateTime.now());
-        flight.setUpdatedAt(LocalDateTime.now());
-        flight.setAvailableSeats(flight.getTotalSeats());
-        return flightRepository.save(flight);
+        log.info("Adding new flight");
+        return flightRepository.save(flight)
+                .doOnSuccess(f -> log.info("Flight added and cached: {}", f.getId()));
     }
     
     public Flux<Flight> searchFlights(FlightSearchRequest searchRequest) {
-        log.info("Searching flights from {} to {} on {}", 
-                searchRequest.getFromPlace(), 
-                searchRequest.getToPlace(), 
-                searchRequest.getDepartureDate());
+        log.info("Searching flights from {} to {}", searchRequest.getFromPlace(), searchRequest.getToPlace());
         
-        return flightRepository.findByFromPlaceAndToPlaceAndDepartureDateTimeBetween(
-                searchRequest.getFromPlace(),
-                searchRequest.getToPlace(),
-                searchRequest.getDepartureDate().atStartOfDay(),
-                searchRequest.getDepartureDate().atTime(23, 59, 59)
-        );
+        return flightRepository.findAll()
+                .filter(flight -> 
+                    flight.getFromPlace().equalsIgnoreCase(searchRequest.getFromPlace()) &&
+                    flight.getToPlace().equalsIgnoreCase(searchRequest.getToPlace()) &&
+                    flight.getDepartureDateTime().toLocalDate().isEqual(searchRequest.getDepartureDate())
+                )
+                .doOnComplete(() -> log.info("Flight search completed"));
     }
     
+    @Cacheable(value = "flights", key = "#id")
     public Mono<Flight> getFlightById(String id) {
-        log.info("Fetching flight with ID: {}", id);
+        log.info("CACHE MISS - Fetching flight from MongoDB: {}", id);
         return flightRepository.findById(id)
-                .switchIfEmpty(Mono.error(new RuntimeException("Flight not found with ID: " + id)));
+                .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found with id: " + id)))
+                .doOnSuccess(flight -> log.info("Flight fetched and cached: {}", id));
     }
     
-    public Mono<Flight> updateSeats(String id, Integer seatsToBook) {
-        log.info("Updating seats for flight: {}", id);
+    @CachePut(value = "flights", key = "#id")
+    public Mono<Flight> updateSeats(String id, Integer seats) {
+        log.info("Updating seats for flight: {}, seats: {}", id, seats);
         
         return flightRepository.findById(id)
+                .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found with id: " + id)))
                 .flatMap(flight -> {
-                    if (flight.getAvailableSeats() < seatsToBook) {
-                        return Mono.error(new RuntimeException(
-                                "Not enough seats available. Available: " + flight.getAvailableSeats()));
+                    int newAvailableSeats = flight.getAvailableSeats() - seats;
+                    
+                    if (newAvailableSeats < 0) {
+                        return Mono.error(new RuntimeException("Not enough seats available"));
                     }
                     
-                    flight.setAvailableSeats(flight.getAvailableSeats() - seatsToBook);
-                    flight.setUpdatedAt(LocalDateTime.now());
+                    flight.setAvailableSeats(newAvailableSeats);
                     return flightRepository.save(flight);
                 })
-                .switchIfEmpty(Mono.error(new RuntimeException("Flight not found with ID: " + id)));
+                .doOnSuccess(f -> log.info("Flight seats updated and cache refreshed: {}", id));
     }
     
+    @CacheEvict(value = "flights", allEntries = true)
     public Mono<Void> deleteFlight(String id) {
-        log.info("Deleting flight with ID: {}", id);
-        return flightRepository.deleteById(id);
-    }
-    
-    public Flux<Flight> getAllFlights() {
-        return flightRepository.findAll();
+        log.info("Deleting flight and evicting cache: {}", id);
+        
+        return flightRepository.findById(id)
+                .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found with id: " + id)))
+                .flatMap(flight -> flightRepository.deleteById(id))
+                .doOnSuccess(v -> log.info("Flight deleted and cache cleared: {}", id));
     }
 }

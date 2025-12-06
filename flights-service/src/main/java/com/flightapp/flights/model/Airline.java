@@ -3,14 +3,16 @@ package com.flightapp.flights.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Document(collection = "airlines")
-public class Airline {
+public class Airline implements Serializable{
     
     @Id
     private String id;
     private String airlineName;
+    private static final long serialVersionUID = 1L;
     private String airlineCode;
     private String contactEmail;
     private String contactPhone;
