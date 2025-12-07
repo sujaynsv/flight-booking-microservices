@@ -23,9 +23,7 @@ public class FlightService {
     public FlightService(FlightRepository flightRepository) {
         this.flightRepository = flightRepository;
     }
-    
-    @CachePut(value = "flights", key = "#result.id")
-    @CacheEvict(value = "flights", key = "'all'")
+
     public Mono<Flight> addFlight(Flight flight) {
         log.info("Adding new flight");
         return flightRepository.save(flight)
@@ -43,8 +41,7 @@ public class FlightService {
                 )
                 .doOnComplete(() -> log.info("Flight search completed"));
     }
-    
-    @Cacheable(value = "flights", key = "#id")
+
     public Mono<Flight> getFlightById(String id) {
         log.info("CACHE MISS - Fetching flight from MongoDB: {}", id);
         return flightRepository.findById(id)
@@ -52,7 +49,7 @@ public class FlightService {
                 .doOnSuccess(flight -> log.info("Flight fetched and cached: {}", id));
     }
     
-    @CachePut(value = "flights", key = "#id")
+
     public Mono<Flight> updateSeats(String id, Integer seats) {
         log.info("Updating seats for flight: {}, seats: {}", id, seats);
         
@@ -71,7 +68,7 @@ public class FlightService {
                 .doOnSuccess(f -> log.info("Flight seats updated and cache refreshed: {}", id));
     }
     
-    @CacheEvict(value = "flights", allEntries = true)
+
     public Mono<Void> deleteFlight(String id) {
         log.info("Deleting flight and evicting cache: {}", id);
         

@@ -1,4 +1,4 @@
-package com.flightapp.bookings.config;
+package com.flightapp.email.config;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;

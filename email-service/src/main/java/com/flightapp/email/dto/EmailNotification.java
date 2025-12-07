@@ -1,4 +1,4 @@
-package com.flightapp.bookings.dto;
+package com.flightapp.email.dto;
 
 import java.io.Serializable;
 

@@ -36,7 +36,8 @@
         <module>flights-service</module>
         <module>bookings-service</module>
         <module>config-server</module>
-        
+
+        <module>email-service</module>
     </modules>
 
     <dependencyManagement>

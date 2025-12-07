@@ -1,29 +1,34 @@
+version: "3.8"
+
 services:
   mongodb:
-    image: mongo:7.0
-    container_name: mongodb-flight-booking
+    image: mongo:6.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: flights_db
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
-    networks:
-      - flight-network
+      - mongo_data:/data/db
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq-flight-booking
+  flights-service:
+    build: ./flights-service
+    container_name: flights-service
+    restart: on-failure
+    depends_on:
+      - mongodb
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "8081:8081"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    networks:
-      - flight-network
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/flights_db
+      
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      EUREKA_CLIENT_ENABLED: "false"
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    stdin_open: true
+    tty: true
 
 volumes:
-  mongodb_data:
-
-networks:
-  flight-network:
-    driver: bridge
+  mongo_data:
