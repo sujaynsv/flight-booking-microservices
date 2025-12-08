@@ -1,0 +1,16 @@
+email-service  | 
+email-service  |   .   ____          _            __ _ _
+email-service  |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+email-service  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+email-service  |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+email-service  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+email-service  |  =========|_|==============|___/=/_/_/_/
+email-service  | [32m :: Spring Boot :: [39m              [2m (v3.2.0)[0;39m
+email-service  | 
+email-service  | [2m2025-12-08T09:52:49.502Z[0;39m [32m INFO[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mc.f.email.EmailServiceApplication       [0;39m [2m:[0;39m Starting EmailServiceApplication v1.0.0 using Java 17.0.2 with PID 1 (/app/app.jar started by root in /app)
+email-service  | [2m2025-12-08T09:52:49.512Z[0;39m [32mDEBUG[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mc.f.email.EmailServiceApplication       [0;39m [2m:[0;39m Running with Spring Boot v3.2.0, Spring v6.1.1
+email-service  | [2m2025-12-08T09:52:49.514Z[0;39m [32m INFO[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mc.f.email.EmailServiceApplication       [0;39m [2m:[0;39m No active profile set, falling back to 1 default profile: "default"
+email-service  | [2m2025-12-08T09:53:02.237Z[0;39m [32m INFO[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mo.s.b.web.embedded.netty.NettyWebServer [0;39m [2m:[0;39m Netty started on port 8085
+email-service  | [2m2025-12-08T09:53:02.293Z[0;39m [32m INFO[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mo.s.a.r.c.CachingConnectionFactory      [0;39m [2m:[0;39m Attempting to connect to: [rabbitmq:5672]
+email-service  | [2m2025-12-08T09:53:02.504Z[0;39m [32m INFO[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mo.s.a.r.c.CachingConnectionFactory      [0;39m [2m:[0;39m Created new connection: rabbitConnectionFactory#365cdacf:0/SimpleConnection@11381415 [delegate=amqp://guest@172.19.0.2:5672/, localPort=35340]
+email-service  | [2m2025-12-08T09:53:03.153Z[0;39m [32m INFO[0;39m [35m1[0;39m [2m---[0;39m [2m[email-service] [           main][0;39m [2m[0;39m[36mc.f.email.EmailServiceApplication       [0;39m [2m:[0;39m Started EmailServiceApplication in 16.045 seconds (process running for 19.637)

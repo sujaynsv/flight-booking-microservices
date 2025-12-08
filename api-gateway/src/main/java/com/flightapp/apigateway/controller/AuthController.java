@@ -41,57 +41,47 @@ public class AuthController {
     }
     
     @PostMapping("/register")
-    public Mono<ResponseEntity<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
+    public Mono<ResponseEntity<String>> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Register request received for email: {}", request.getEmail());
         
         return authService.register(request)
                 .flatMap(token -> {
                     ResponseCookie cookie = createCookie(token);
                     
-                    return authService.getUserInfo(request.getEmail())
-                            .map(authResponse -> {
-                                authResponse.setMessage("Registration successful");
-                                return ResponseEntity.ok()
-                                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                                        .body(authResponse);
-                            });
+                    return Mono.just(ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                            .body("Registration successful"));
                 })
                 .onErrorResume(e -> {
                     log.error("Registration failed: {}", e.getMessage());
-                    AuthResponse errorResponse = AuthResponse.builder()
-                            .message(e.getMessage())
-                            .build();
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse));
+                    return Mono.just(ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body(e.getMessage()));
                 });
     }
     
     @PostMapping("/login")
-    public Mono<ResponseEntity<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public Mono<ResponseEntity<String>> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login request received for email: {}", request.getEmail());
         
         return authService.login(request)
                 .flatMap(token -> {
                     ResponseCookie cookie = createCookie(token);
                     
-                    return authService.getUserInfo(request.getEmail())
-                            .map(authResponse -> {
-                                authResponse.setMessage("Login successful");
-                                return ResponseEntity.ok()
-                                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                                        .body(authResponse);
-                            });
+                    return Mono.just(ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                            .body("Login successful"));
                 })
                 .onErrorResume(e -> {
                     log.error("Login failed: {}", e.getMessage());
-                    AuthResponse errorResponse = AuthResponse.builder()
-                            .message(e.getMessage())
-                            .build();
-                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse));
+                    return Mono.just(ResponseEntity
+                            .status(HttpStatus.UNAUTHORIZED)
+                            .body(e.getMessage()));
                 });
     }
     
     @PostMapping("/logout")
-    public Mono<ResponseEntity<AuthResponse>> logout() {
+    public Mono<ResponseEntity<String>> logout() {
         log.info("Logout request received");
         
         ResponseCookie cookie = ResponseCookie.from(cookieName, "")
@@ -101,13 +91,9 @@ public class AuthController {
                 .maxAge(0)
                 .build();
         
-        AuthResponse response = AuthResponse.builder()
-                .message("Logout successful")
-                .build();
-        
         return Mono.just(ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(response));
+                .body("Logout successful"));
     }
     
     @GetMapping("/me")

@@ -1,34 +1,200 @@
-version: "3.8"
-
 services:
   mongodb:
     image: mongo:6.0
     container_name: mongodb
     restart: always
-    environment:
-      MONGO_INITDB_DATABASE: flights_db
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - flight-network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - flight-network
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    restart: on-failure
+    ports:
+      - "8761:8761"
+    networks:
+      - flight-network
+    environment:
+      SPRING_APPLICATION_NAME: eureka-server
+      SERVER_PORT: 8761
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      EUREKA_SERVER_ENABLE_SELF_PRESERVATION: "false"
+    depends_on:
+      - mongodb
+      - rabbitmq
+    stdin_open: true
+    tty: true
+
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    restart: on-failure
+    ports:
+      - "8888:8888"
+    networks:
+      - flight-network
+    environment:
+      SPRING_APPLICATION_NAME: config-server
+      SERVER_PORT: 8888
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+    depends_on:
+      - eureka-server
+    stdin_open: true
+    tty: true
 
   flights-service:
     build: ./flights-service
     container_name: flights-service
     restart: on-failure
-    depends_on:
-      - mongodb
     ports:
       - "8081:8081"
+    networks:
+      - flight-network
     environment:
+      SPRING_APPLICATION_NAME: flights-service
+      SERVER_PORT: 8081
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/flights_db
-      
+      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: "true"
       SPRING_CLOUD_CONFIG_ENABLED: "false"
-      EUREKA_CLIENT_ENABLED: "false"
-      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
-      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: flights-service
+      EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS: "10"
+      EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS: "30"
+      LOGGING_LEVEL_COM_FLIGHTAPP: DEBUG
+    depends_on:
+      - eureka-server
+      - mongodb
     stdin_open: true
     tty: true
 
+  bookings-service:
+    build: ./bookings-service
+    container_name: bookings-service
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    networks:
+      - flight-network
+    environment:
+      SPRING_APPLICATION_NAME: bookings-service
+      SERVER_PORT: 8082
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/bookings_db
+      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: "true"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_RABBITMQ_PUBLISHER_CONFIRM_TYPE: correlated
+      SPRING_RABBITMQ_PUBLISHER_RETURNS: "true"
+      EMAIL_QUEUE_NAME: booking.email.queue
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: bookings-service
+      EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS: "10"
+      EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS: "30"
+      LOGGING_LEVEL_COM_FLIGHTAPP: DEBUG
+    depends_on:
+      - eureka-server
+      - mongodb
+      - rabbitmq
+    stdin_open: true
+    tty: true
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    networks:
+      - flight-network
+    environment:
+      SPRING_APPLICATION_NAME: api-gateway
+      SERVER_PORT: 8080
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/auth_db
+      SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: "true"
+      JWT_SECRET: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+      JWT_EXPIRATION: 86400000
+      JWT_COOKIE_NAME: authToken
+      JWT_COOKIE_MAX_AGE: 86400
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: api-gateway
+      EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS: "10"
+      EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS: "30"
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY: DEBUG
+      LOGGING_LEVEL_COM_FLIGHTAPP: DEBUG
+    depends_on:
+      - eureka-server
+      - mongodb
+    stdin_open: true
+    tty: true
+
+  email-service:
+    build: ./email-service
+    container_name: email-service
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    networks:
+      - flight-network
+    environment:
+      SPRING_APPLICATION_NAME: email-service
+      SERVER_PORT: 8085
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EMAIL_QUEUE_NAME: booking.email.queue
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: email-service
+      EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS: "10"
+      EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS: "30"
+      LOGGING_LEVEL_COM_FLIGHTAPP: DEBUG
+    depends_on:
+      - eureka-server
+      - rabbitmq
+    stdin_open: true
+    tty: true
+
+networks:
+  flight-network:
+    driver: bridge
+
 volumes:
   mongo_data:
+  rabbitmq_data:
