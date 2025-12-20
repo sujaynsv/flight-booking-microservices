@@ -54,4 +54,14 @@ public class FlightController {
         return flightService.deleteFlight(id)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()));
     }
+    
+    
+    @PutMapping("/{flightId}/release-seats")
+    public Mono<Void> releaseSeats(
+            @PathVariable String flightId,
+            @RequestParam Integer seats) {
+
+        return flightService.releaseSeats(flightId, seats);
+    }
+    
 }

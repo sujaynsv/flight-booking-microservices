@@ -45,4 +45,27 @@ public class FlightsClient {
                 .doOnSuccess(flight -> log.info("Successfully updated seats for flight: {}", flightId))
                 .doOnError(error -> log.error("Error updating seats: {}", error.getMessage()));
     }
+    
+    public Mono<Void> releaseSeats(String flightId, Integer seats) {
+        String url = flightsServiceUrl
+                + "/flight/"
+                + flightId
+                + "/release-seats?seats="
+                + seats;
+
+        log.info("Calling flights service to release seats. URL: {}", url);
+
+        return webClientBuilder.build()
+                .put()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .doOnSuccess(v ->
+                        log.info("Successfully released {} seats for flight {}", seats, flightId)
+                )
+                .doOnError(error ->
+                        log.error("Error releasing seats: {}", error.getMessage())
+                );
+    }
+
 }

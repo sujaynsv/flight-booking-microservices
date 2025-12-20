@@ -3,6 +3,7 @@ package com.flightapp.apigateway.service;
 import com.flightapp.apigateway.dto.AuthResponse;
 import com.flightapp.apigateway.dto.LoginRequest;
 import com.flightapp.apigateway.dto.RegisterRequest;
+import com.flightapp.apigateway.dto.UserInfo;
 import com.flightapp.apigateway.model.User;
 import com.flightapp.apigateway.repository.UserRepository;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class AuthService {
         this.jwtService = jwtService;
     }
     
-    public Mono<String> register(RegisterRequest request) {
+    public Mono<UserInfo> register(RegisterRequest request) {
         log.info("Registering new user: {}", request.getEmail());
         
         return userRepository.existsByEmail(request.getEmail())
@@ -48,11 +49,20 @@ public class AuthService {
                             .build();
                     
                     return userRepository.save(user)
-                            .map(savedUser -> jwtService.generateToken(savedUser.getEmail(), savedUser.getRole()));
+                            .map(savedUser -> {
+                                String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole());
+                                return UserInfo.builder()
+                                        .email(savedUser.getEmail())
+                                        .firstName(savedUser.getFirstName())
+                                        .lastName(savedUser.getLastName())
+                                        .token(token)
+                                        .role(savedUser.getRole())
+                                        .build();
+                            });
                 });
     }
     
-    public Mono<String> login(LoginRequest request) {
+    public Mono<UserInfo> login(LoginRequest request) {
         log.info("User login attempt: {}", request.getEmail());
         
         return userRepository.findByEmail(request.getEmail())
@@ -63,7 +73,13 @@ public class AuthService {
                     }
                     
                     String token = jwtService.generateToken(user.getEmail(), user.getRole());
-                    return Mono.just(token);
+                    return Mono.just(UserInfo.builder()
+                            .email(user.getEmail())
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .token(token)
+                            .role(user.getRole())
+                            .build());
                 });
     }
     

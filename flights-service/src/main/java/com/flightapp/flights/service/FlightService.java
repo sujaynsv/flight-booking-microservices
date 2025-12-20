@@ -4,11 +4,12 @@ import com.flightapp.flights.dto.FlightSearchRequest;
 import com.flightapp.flights.exception.FlightNotFoundException;
 import com.flightapp.flights.model.Flight;
 import com.flightapp.flights.repository.FlightRepository;
+
+import java.time.LocalDateTime;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -77,4 +78,17 @@ public class FlightService {
                 .flatMap(flight -> flightRepository.deleteById(id))
                 .doOnSuccess(v -> log.info("Flight deleted and cache cleared: {}", id));
     }
+    
+    public Mono<Void> releaseSeats(String flightId, Integer seats) {
+        return flightRepository.findById(flightId)
+            .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found")))
+            .flatMap(flight -> {
+                flight.setAvailableSeats(flight.getAvailableSeats() + seats);
+                flight.setUpdatedAt(LocalDateTime.now());
+                return flightRepository.save(flight);
+            })
+            .then();
+    }
+
+
 }
