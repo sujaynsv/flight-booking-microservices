@@ -34,36 +34,39 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
-            
-            log.debug("Processing request: {} {}", request.getMethod(), request.getURI());
-            
+
+            log.info("AuthenticationFilter: handling {} {}", request.getMethod(), request.getURI());
+
             HttpCookie cookie = request.getCookies().getFirst(cookieName);
-            
             if (cookie == null) {
-                log.warn("No auth cookie found in request");
+                log.warn("No auth cookie found");
                 return onError(exchange, "Missing authentication token", HttpStatus.UNAUTHORIZED);
             }
-            
+
             String token = cookie.getValue();
-            
+            log.info("AuthenticationFilter: token = {}", token);
+
             if (!jwtService.validateToken(token)) {
                 log.warn("Invalid or expired token");
                 return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
             }
-            
+
             String email = jwtService.extractEmail(token);
             String role = jwtService.extractRole(token);
-            
-            log.info("Authenticated user: {} with role: {}", email, role);
-            
+            log.info("AuthenticationFilter: extracted email={}, role={}", email, role);
+
             ServerHttpRequest modifiedRequest = request.mutate()
                     .header("X-User-Email", email)
                     .header("X-User-Role", role)
                     .build();
-            
+
+            log.info("------------------------------AuthenticationFilter: added headers X-User-Email={}, X-User-Role={}", email, role);
+
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         };
     }
+
+
     
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         ServerHttpResponse response = exchange.getResponse();

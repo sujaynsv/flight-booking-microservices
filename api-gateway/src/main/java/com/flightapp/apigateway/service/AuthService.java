@@ -38,12 +38,14 @@ public class AuthService {
                         return Mono.error(new RuntimeException("Email already exists"));
                     }
                     
+                    String role=request.getRole();
+                    
                     User user = User.builder()
                             .email(request.getEmail())
                             .password(passwordEncoder.encode(request.getPassword()))
                             .firstName(request.getFirstName())
                             .lastName(request.getLastName())
-                            .role("USER")
+                            .role(role)
                             .createdAt(LocalDateTime.now())
                             .updatedAt(LocalDateTime.now())
                             .build();
@@ -93,4 +95,30 @@ public class AuthService {
                         .message("User details fetched successfully")
                         .build());
     }
+    
+    public Mono<Boolean> changePassword(String email, String currentPassword, String newPassword) {
+        log.info("Password change attempt for user: {}", email);
+        
+        return userRepository.findByEmail(email)
+            .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+            .flatMap(user -> {
+                // Verify current password
+                if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                    log.warn("Invalid current password for user: {}", email);
+                    return Mono.just(false);
+                }
+                
+                // Update password (hash the new one)
+                user.setPassword(passwordEncoder.encode(newPassword));
+                user.setUpdatedAt(LocalDateTime.now());
+                
+                return userRepository.save(user)
+                    .map(savedUser -> {
+                        log.info("Password changed successfully for user: {}", email);
+                        return true;
+                    });
+            });
+    }
+
+    
 }

@@ -9,10 +9,10 @@ public class AuthResponse {
     private String message;
     private String email;
     
-    @JsonProperty("firstname")  // ✅ Map Java camelCase to JSON lowercase
+    @JsonProperty("firstname")  
     private String firstName;
     
-    @JsonProperty("lastname")   // ✅ Map Java camelCase to JSON lowercase
+    @JsonProperty("lastname")   
     private String lastName;
     
     private String role;

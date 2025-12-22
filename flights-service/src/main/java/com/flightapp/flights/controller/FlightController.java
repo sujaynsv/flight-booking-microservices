@@ -22,7 +22,15 @@ public class FlightController {
     }
     
     @PostMapping("/airline/inventory")
-    public Mono<ResponseEntity<Map<String, String>>> addFlight(@RequestBody Flight flight) {
+    public Mono<ResponseEntity<Map<String, String>>> addFlight(
+            @RequestHeader("X-User-Role") String role,
+            @RequestBody Flight flight) {
+        
+        if (!"ADMIN".equals(role)) {
+            return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Forbidden: Admin access required")));
+        }
+        
         return flightService.addFlight(flight)
                 .map(saved -> ResponseEntity
                         .status(HttpStatus.CREATED)
