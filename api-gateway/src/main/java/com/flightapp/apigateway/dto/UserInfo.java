@@ -1,39 +1,21 @@
 package com.flightapp.apigateway.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthResponse {
-    
-    private String message;
+public class UserInfo {
     private String email;
-    
-    @JsonProperty("firstname")  
     private String firstName;
-    
-    @JsonProperty("lastname")   
     private String lastName;
-    
+    private String token;
     private String role;
     
-    public AuthResponse() {
+    public UserInfo() {
     }
     
-    public AuthResponse(String message, String email, String firstName, String lastName, String role) {
-        this.message = message;
+    public UserInfo(String email, String firstName, String lastName, String token, String role) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.token = token;
         this.role = role;
-    }
-    
-    public String getMessage() {
-        return message;
-    }
-    
-    public void setMessage(String message) {
-        this.message = message;
     }
     
     public String getEmail() {
@@ -60,6 +42,14 @@ public class AuthResponse {
         this.lastName = lastName;
     }
     
+    public String getToken() {
+        return token;
+    }
+    
+    public void setToken(String token) {
+        this.token = token;
+    }
+    
     public String getRole() {
         return role;
     }
@@ -73,16 +63,11 @@ public class AuthResponse {
     }
     
     public static class Builder {
-        private String message;
         private String email;
         private String firstName;
         private String lastName;
+        private String token;
         private String role;
-        
-        public Builder message(String message) {
-            this.message = message;
-            return this;
-        }
         
         public Builder email(String email) {
             this.email = email;
@@ -99,13 +84,18 @@ public class AuthResponse {
             return this;
         }
         
+        public Builder token(String token) {
+            this.token = token;
+            return this;
+        }
+        
         public Builder role(String role) {
             this.role = role;
             return this;
         }
         
-        public AuthResponse build() {
-            return new AuthResponse(message, email, firstName, lastName, role);
+        public UserInfo build() {
+            return new UserInfo(email, firstName, lastName, token, role);
         }
     }
 }

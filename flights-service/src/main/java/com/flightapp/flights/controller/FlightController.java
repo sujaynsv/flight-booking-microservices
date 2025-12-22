@@ -22,7 +22,15 @@ public class FlightController {
     }
     
     @PostMapping("/airline/inventory")
-    public Mono<ResponseEntity<Map<String, String>>> addFlight(@RequestBody Flight flight) {
+    public Mono<ResponseEntity<Map<String, String>>> addFlight(
+            @RequestHeader("X-User-Role") String role,
+            @RequestBody Flight flight) {
+        
+        if (!"ADMIN".equals(role)) {
+            return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Forbidden: Admin access required")));
+        }
+        
         return flightService.addFlight(flight)
                 .map(saved -> ResponseEntity
                         .status(HttpStatus.CREATED)
@@ -54,4 +62,14 @@ public class FlightController {
         return flightService.deleteFlight(id)
                 .then(Mono.just(ResponseEntity.noContent().<Void>build()));
     }
+    
+    
+    @PutMapping("/{flightId}/release-seats")
+    public Mono<Void> releaseSeats(
+            @PathVariable String flightId,
+            @RequestParam Integer seats) {
+
+        return flightService.releaseSeats(flightId, seats);
+    }
+    
 }

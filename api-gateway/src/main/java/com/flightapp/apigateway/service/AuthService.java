@@ -3,6 +3,7 @@ package com.flightapp.apigateway.service;
 import com.flightapp.apigateway.dto.AuthResponse;
 import com.flightapp.apigateway.dto.LoginRequest;
 import com.flightapp.apigateway.dto.RegisterRequest;
+import com.flightapp.apigateway.dto.UserInfo;
 import com.flightapp.apigateway.model.User;
 import com.flightapp.apigateway.repository.UserRepository;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class AuthService {
         this.jwtService = jwtService;
     }
     
-    public Mono<String> register(RegisterRequest request) {
+    public Mono<UserInfo> register(RegisterRequest request) {
         log.info("Registering new user: {}", request.getEmail());
         
         return userRepository.existsByEmail(request.getEmail())
@@ -37,22 +38,33 @@ public class AuthService {
                         return Mono.error(new RuntimeException("Email already exists"));
                     }
                     
+                    String role=request.getRole();
+                    
                     User user = User.builder()
                             .email(request.getEmail())
                             .password(passwordEncoder.encode(request.getPassword()))
                             .firstName(request.getFirstName())
                             .lastName(request.getLastName())
-                            .role("USER")
+                            .role(role)
                             .createdAt(LocalDateTime.now())
                             .updatedAt(LocalDateTime.now())
                             .build();
                     
                     return userRepository.save(user)
-                            .map(savedUser -> jwtService.generateToken(savedUser.getEmail(), savedUser.getRole()));
+                            .map(savedUser -> {
+                                String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole());
+                                return UserInfo.builder()
+                                        .email(savedUser.getEmail())
+                                        .firstName(savedUser.getFirstName())
+                                        .lastName(savedUser.getLastName())
+                                        .token(token)
+                                        .role(savedUser.getRole())
+                                        .build();
+                            });
                 });
     }
     
-    public Mono<String> login(LoginRequest request) {
+    public Mono<UserInfo> login(LoginRequest request) {
         log.info("User login attempt: {}", request.getEmail());
         
         return userRepository.findByEmail(request.getEmail())
@@ -63,7 +75,13 @@ public class AuthService {
                     }
                     
                     String token = jwtService.generateToken(user.getEmail(), user.getRole());
-                    return Mono.just(token);
+                    return Mono.just(UserInfo.builder()
+                            .email(user.getEmail())
+                            .firstName(user.getFirstName())
+                            .lastName(user.getLastName())
+                            .token(token)
+                            .role(user.getRole())
+                            .build());
                 });
     }
     
@@ -77,4 +95,30 @@ public class AuthService {
                         .message("User details fetched successfully")
                         .build());
     }
+    
+    public Mono<Boolean> changePassword(String email, String currentPassword, String newPassword) {
+        log.info("Password change attempt for user: {}", email);
+        
+        return userRepository.findByEmail(email)
+            .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+            .flatMap(user -> {
+                // Verify current password
+                if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                    log.warn("Invalid current password for user: {}", email);
+                    return Mono.just(false);
+                }
+                
+                // Update password (hash the new one)
+                user.setPassword(passwordEncoder.encode(newPassword));
+                user.setUpdatedAt(LocalDateTime.now());
+                
+                return userRepository.save(user)
+                    .map(savedUser -> {
+                        log.info("Password changed successfully for user: {}", email);
+                        return true;
+                    });
+            });
+    }
+
+    
 }

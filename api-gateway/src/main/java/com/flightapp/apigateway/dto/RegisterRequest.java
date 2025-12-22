@@ -20,16 +20,23 @@ public class RegisterRequest {
     @NotBlank(message = "Last name is required")
     private String lastName;
     
+    private String role;
+    
     public RegisterRequest() {
     }
     
-    public RegisterRequest(String email, String password, String firstName, String lastName) {
+    public RegisterRequest(String email, String password, String firstName, String lastName, String role) {
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+        
+        this.role=role;
     }
     
+    public String getRole() {
+    	return role;
+    }
     public String getEmail() {
         return email;
     }

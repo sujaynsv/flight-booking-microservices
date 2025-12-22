@@ -14,15 +14,15 @@ public class Booking {
     private String id;
     private String pnr;
     private String flightId;
-    public ZonedDateTime getJourneyDateTime() {
-		return journeyDateTime;
-	}
+//    public ZonedDateTime getJourneyDateTime() {
+//		return journeyDateTime;
+//	}
+//
+//	public void setJourneyDateTime(ZonedDateTime journeyDateTime) {
+//		this.journeyDateTime = journeyDateTime;
+//	}
 
-	public void setJourneyDateTime(ZonedDateTime journeyDateTime) {
-		this.journeyDateTime = journeyDateTime;
-	}
-
-	private ZonedDateTime journeyDateTime;
+//	private ZonedDateTime journeyDateTime;
     
     private String email;
     private String name;

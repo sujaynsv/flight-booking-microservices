@@ -43,7 +43,6 @@ public class BookingService {
     public Mono<Booking> createBooking(String flightId, BookingRequest request) {
         log.info("Creating booking for flight: {}", flightId);
         
-        // REMOVED CIRCUIT BREAKER - Direct call
         return flightsClient.getFlightById(flightId)
             .flatMap(flight -> {
                 return flightsClient.updateSeats(flightId, request.getNumberOfSeats())
@@ -72,7 +71,6 @@ public class BookingService {
     }
 
     
-    // FALLBACK METHOD - Called when circuit breaker opens
     private Mono<Booking> createBookingFallback(String flightId, BookingRequest request, Throwable ex) {
     			log.error("circuit breaker trigerred");
         
@@ -92,22 +90,32 @@ public class BookingService {
     
     public Mono<Void> cancelBooking(String pnr) {
         return bookingRepository.findByPnr(pnr)
-                .switchIfEmpty(Mono.error(new BookingNotFoundException("Booking not found with PNR: " + pnr)))
+                .switchIfEmpty(Mono.error(
+                        new BookingNotFoundException("Booking not found with PNR: " + pnr)))
                 .flatMap(booking -> {
+
                     LocalDateTime now = LocalDateTime.now();
                     Duration duration = Duration.between(now, booking.getJourneyDate());
-                    
+
                     if (duration.toHours() < 24) {
-                        return Mono.error(new CancellationNotAllowedException(
-                                "Cancellation not allowed within 24 hours of journey date"));
+                        return Mono.error(
+                                new CancellationNotAllowedException(
+                                        "Cancellation not allowed within 24 hours of journey date"));
                     }
-                    
-                    booking.setStatus(Booking.BookingStatus.CANCELLED);
-                    return bookingRepository.save(booking)
-                            .doOnSuccess(b -> log.info("Booking cancelled successfully: {}", pnr))
+
+                    return flightsClient
+                            .releaseSeats(
+                                    booking.getFlightId(),
+                                    booking.getNumberOfSeats()
+                            )
+                            .then(Mono.defer(() -> {
+                                booking.setStatus(Booking.BookingStatus.CANCELLED);
+                                return bookingRepository.save(booking);
+                            }))
                             .then();
                 });
     }
+
     
     private Mono<Void> sendBookingEmail(Booking booking, FlightDTO flight) {
         EmailNotification notification = new EmailNotification();
@@ -155,4 +163,7 @@ public class BookingService {
     private String generatePNR() {
         return "PNR" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
+    
+    
+    
 }
