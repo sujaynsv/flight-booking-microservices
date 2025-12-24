@@ -1,9 +1,13 @@
 package com.flightapp.bookings.client;
 
 import com.flightapp.bookings.dto.FlightDTO;
+
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -66,6 +70,20 @@ public class FlightsClient {
                 .doOnError(error ->
                         log.error("Error releasing seats: {}", error.getMessage())
                 );
+    }
+
+        public Mono<List<String>> getBookedSeats(String flightId) {
+        log.info("Calling flights service to get booked seats for flight: {}", flightId);
+        
+        return webClientBuilder.build()
+                .get()
+                .uri(flightsServiceUrl + "/flight/booked-seats/" + flightId)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
+                .doOnSuccess(seats -> log.info("Successfully fetched {} booked seats for flight: {}", 
+                    seats.size(), flightId))
+                .doOnError(error -> log.error("Error fetching booked seats: {}", error.getMessage()))
+                .onErrorReturn(List.of()); // Return empty list on error
     }
 
 }

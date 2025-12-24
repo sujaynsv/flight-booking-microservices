@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -42,41 +43,72 @@ public class BookingService {
     
     public Mono<Booking> createBooking(String flightId, BookingRequest request) {
         log.info("Creating booking for flight: {}", flightId);
-        
-        return flightsClient.getFlightById(flightId)
-            .flatMap(flight -> {
-                return flightsClient.updateSeats(flightId, request.getNumberOfSeats())
-                        .flatMap(updatedFlight -> {
-                            Booking booking = new Booking();
-                            booking.setPnr(generatePNR());
-                            booking.setFlightId(flightId);
-                            booking.setEmail(request.getEmail());
-                            booking.setName(request.getName());
-                            booking.setNumberOfSeats(request.getNumberOfSeats());
-                            booking.setPassengers(request.getPassengers());
-                            booking.setSeatNumbers(request.getSeatNumbers());
-                            booking.setTotalPrice(flight.getPrice() * request.getNumberOfSeats());
-                            booking.setStatus(Booking.BookingStatus.CONFIRMED);
-                            booking.setBookingDateTime(LocalDateTime.now());
-                            booking.setJourneyDate(flight.getDepartureDateTime().toLocalDate().atStartOfDay());
-                            
-                            return bookingRepository.save(booking)
-                                    .doOnSuccess(b -> {
-                                        log.info("Booking created successfully with PNR: {}", b.getPnr());
-                                        sendBookingEmail(b, flight).subscribe();
-                                    });
-                        });
-            })
-            .doOnError(error -> log.error("Booking creation failed: {}", error.getMessage()));
-    }
 
-    
-    private Mono<Booking> createBookingFallback(String flightId, BookingRequest request, Throwable ex) {
-    			log.error("circuit breaker trigerred");
+        if (request.hasDuplicateSeats()) {
+            return Mono.error(new IllegalArgumentException("Duplicate seat numbers are not allowed"));
+        }
+
+        if (request.getSeatNumbers() == null || request.getSeatNumbers().size() != request.getNumberOfSeats()) {
+            return Mono.error(new IllegalArgumentException("Number of seat numbers must match number of seats"));
+        }
         
-        return Mono.error(new RuntimeException(
-        		"Circuit breaker"
-        ));
+        // ← CHECK IF SEATS ARE ALREADY BOOKED
+        return checkSeatsAvailability(flightId, request.getSeatNumbers())
+                .flatMap(areSeatsAvailable -> {
+                    if (!areSeatsAvailable) {
+                        return Mono.error(new IllegalArgumentException(
+                            "One or more selected seats are already booked. Please refresh and choose different seats."
+                        ));
+                    }
+                    
+                    return flightsClient.getFlightById(flightId)
+                            .flatMap(flight -> {
+                                return flightsClient.updateSeats(flightId, request.getNumberOfSeats())
+                                        .flatMap(updatedFlight -> {
+                                            Booking booking = new Booking();
+                                            booking.setPnr(generatePNR());
+                                            booking.setFlightId(flightId);
+                                            booking.setEmail(request.getEmail());
+                                            booking.setName(request.getName());
+                                            booking.setNumberOfSeats(request.getNumberOfSeats());
+                                            booking.setPassengers(request.getPassengers());
+                                            booking.setSeatNumbers(request.getSeatNumbers());
+                                            booking.setTotalPrice(flight.getPrice() * request.getNumberOfSeats());
+                                            booking.setStatus(Booking.BookingStatus.CONFIRMED);
+                                            booking.setBookingDateTime(LocalDateTime.now());
+                                            booking.setJourneyDate(flight.getDepartureDateTime().toLocalDate().atStartOfDay());
+                                            
+                                            return bookingRepository.save(booking)
+                                                    .doOnSuccess(b -> {
+                                                        log.info("Booking created successfully with PNR: {}", b.getPnr());
+                                                        sendBookingEmail(b, flight).subscribe();
+                                                    });
+                                        });
+                            })
+                            .doOnError(error -> log.error("Booking creation failed: {}", error.getMessage()));
+                });
+    }
+    
+    // ← NEW METHOD TO CHECK SEAT AVAILABILITY
+    private Mono<Boolean> checkSeatsAvailability(String flightId, List<String> requestedSeats) {
+        log.info("Checking seat availability for flight: {}, seats: {}", flightId, requestedSeats);
+        
+        return bookingRepository.findByFlightIdAndStatus(flightId, Booking.BookingStatus.CONFIRMED)
+                .flatMap(booking -> Flux.fromIterable(booking.getSeatNumbers()))
+                .collectList()
+                .map(bookedSeats -> {
+                    boolean hasConflict = requestedSeats.stream()
+                            .anyMatch(seat -> bookedSeats.contains(seat));
+                    
+                    if (hasConflict) {
+                        List<String> conflictingSeats = requestedSeats.stream()
+                                .filter(bookedSeats::contains)
+                                .toList();
+                        log.warn("Seat booking conflict! Already booked seats: {}", conflictingSeats);
+                    }
+                    
+                    return !hasConflict;
+                });
     }
     
     public Mono<Booking> getBookingByPnr(String pnr) {
@@ -93,7 +125,6 @@ public class BookingService {
                 .switchIfEmpty(Mono.error(
                         new BookingNotFoundException("Booking not found with PNR: " + pnr)))
                 .flatMap(booking -> {
-
                     LocalDateTime now = LocalDateTime.now();
                     Duration duration = Duration.between(now, booking.getJourneyDate());
 
@@ -115,7 +146,6 @@ public class BookingService {
                             .then();
                 });
     }
-
     
     private Mono<Void> sendBookingEmail(Booking booking, FlightDTO flight) {
         EmailNotification notification = new EmailNotification();
@@ -164,6 +194,12 @@ public class BookingService {
         return "PNR" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
     
-    
-    
+    public Mono<List<String>> getBookedSeatsByFlight(String flightId) {
+        log.info("Fetching booked seats for flight: {}", flightId);
+        
+        return bookingRepository.findByFlightIdAndStatus(flightId, Booking.BookingStatus.CONFIRMED)
+                .flatMap(booking -> Flux.fromIterable(booking.getSeatNumbers()))
+                .collectList()
+                .doOnSuccess(seats -> log.info("Found {} booked seats for flight: {}", seats.size(), flightId));
+    }
 }

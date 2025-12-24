@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
     
@@ -26,6 +28,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     @Value("${jwt.cookie.name}")
     private String cookieName;
     
+    // Public paths that don't require authentication
+    private static final List<String> PUBLIC_PATHS = List.of(
+        "/auth/",
+        "/booked-seats"
+    );
+    
     public AuthenticationFilter() {
         super(Config.class);
     }
@@ -34,8 +42,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
+            String path = request.getPath().toString();
 
             log.info("AuthenticationFilter: handling {} {}", request.getMethod(), request.getURI());
+
+            // Skip authentication for public paths
+            if (isPublicPath(path)) {
+                log.info("Skipping authentication for public path: {}", path);
+                return chain.filter(exchange);
+            }
 
             HttpCookie cookie = request.getCookies().getFirst(cookieName);
             if (cookie == null) {
@@ -60,13 +75,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     .header("X-User-Role", role)
                     .build();
 
-            log.info("------------------------------AuthenticationFilter: added headers X-User-Email={}, X-User-Role={}", email, role);
+            log.info("AuthenticationFilter: added headers X-User-Email={}, X-User-Role={}", email, role);
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         };
     }
-
-
+    
+    private boolean isPublicPath(String path) {
+        return PUBLIC_PATHS.stream().anyMatch(path::contains);
+    }
     
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         ServerHttpResponse response = exchange.getResponse();

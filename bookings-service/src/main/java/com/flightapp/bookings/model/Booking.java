@@ -35,7 +35,7 @@ public class Booking {
     private LocalDateTime journeyDate;
     
     public enum BookingStatus {
-        CONFIRMED, CANCELLED
+        CONFIRMED, CANCELLED, PENDING
     }
     
     // Constructors

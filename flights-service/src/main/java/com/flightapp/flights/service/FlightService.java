@@ -6,11 +6,15 @@ import com.flightapp.flights.model.Flight;
 import com.flightapp.flights.repository.FlightRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties.Web;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -18,11 +22,12 @@ import reactor.core.publisher.Mono;
 public class FlightService {
     
     private static final Logger log = LoggerFactory.getLogger(FlightService.class);
-    
+    private final WebClient.Builder webClientBuilder;
     private final FlightRepository flightRepository;
     
-    public FlightService(FlightRepository flightRepository) {
+    public FlightService(FlightRepository flightRepository, WebClient.Builder webClientBuilder) {
         this.flightRepository = flightRepository;
+        this.webClientBuilder=webClientBuilder;
     }
 
     public Mono<Flight> addFlight(Flight flight) {
@@ -89,6 +94,21 @@ public class FlightService {
             })
             .then();
     }
+
+
+    public Mono<List<String>> getBookedSeats(String flightId) {
+        log.info("Fetching booked seats for flight: {} from booking service", flightId);
+        
+        return webClientBuilder.build()
+                .get()
+                .uri("lb://bookings-service/flight/booked-seats/{flightId}", flightId)  // ← CORRECT URL
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
+                .doOnSuccess(seats -> log.info("Received {} booked seats for flight: {}", seats.size(), flightId))
+                .doOnError(error -> log.error("Error fetching booked seats from booking service: {}", error.getMessage()))
+                .onErrorReturn(List.of()); // Return empty list on error
+    }
+
 
 
 }

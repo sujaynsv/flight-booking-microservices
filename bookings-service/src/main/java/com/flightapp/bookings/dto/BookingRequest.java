@@ -2,7 +2,9 @@ package com.flightapp.bookings.dto;
 
 import com.flightapp.bookings.model.Passenger;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BookingRequest {
     private String name;
@@ -22,6 +24,15 @@ public class BookingRequest {
         this.seatNumbers = seatNumbers;
     }
     
+    public boolean hasDuplicateSeats(){
+        if(seatNumbers==null || seatNumbers.isEmpty()){
+            return false;
+        }
+        Set<String> uniqueSeats=new HashSet<>(seatNumbers);
+        return uniqueSeats.size()!=seatNumbers.size();
+    }
+
+
     public String getName() {
         return name;
     }
