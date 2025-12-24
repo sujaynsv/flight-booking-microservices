@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,20 +31,31 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
     
-    public String generateToken(String email, String role) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
-        
-        log.info("Generating JWT token for user: {}", email);
-        
-        return Jwts.builder()
-                .claims(claims)
-                .subject(email)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey())
-                .compact();
+public String generateToken(String email, String role, LocalDateTime lastPasswordChange) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("role", role);
+    
+    // ← FIX: Handle null lastPasswordChange
+    if (lastPasswordChange != null) {
+        claims.put("lastPasswordChange", lastPasswordChange.toString());
+        claims.put("passwordExpiryDays", 30);
+    } else {
+        // Default to current time if null
+        claims.put("lastPasswordChange", LocalDateTime.now().toString());
+        claims.put("passwordExpiryDays", 30);
     }
+    
+    log.info("Generating JWT token for user: {}", email);
+    
+    return Jwts.builder()
+            .claims(claims)
+            .subject(email)
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(new Date(System.currentTimeMillis() + expiration))
+            .signWith(getSigningKey())
+            .compact();
+}
+
     
     public Claims extractAllClaims(String token) {
         return Jwts.parser()

@@ -2,6 +2,7 @@ package com.flightapp.apigateway.service;
 
 import com.flightapp.apigateway.dto.AuthResponse;
 import com.flightapp.apigateway.dto.LoginRequest;
+import com.flightapp.apigateway.dto.PasswordResetRequest;
 import com.flightapp.apigateway.dto.RegisterRequest;
 import com.flightapp.apigateway.dto.UserInfo;
 import com.flightapp.apigateway.model.User;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -48,11 +51,12 @@ public class AuthService {
                             .role(role)
                             .createdAt(LocalDateTime.now())
                             .updatedAt(LocalDateTime.now())
+                            .lastPasswordChange(LocalDateTime.now())
                             .build();
                     
                     return userRepository.save(user)
                             .map(savedUser -> {
-                                String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole());
+                                String token = jwtService.generateToken(savedUser.getEmail(), savedUser.getRole(), savedUser.getLastPasswordChange());
                                 return UserInfo.builder()
                                         .email(savedUser.getEmail())
                                         .firstName(savedUser.getFirstName())
@@ -64,26 +68,44 @@ public class AuthService {
                 });
     }
     
-    public Mono<UserInfo> login(LoginRequest request) {
-        log.info("User login attempt: {}", request.getEmail());
-        
+    
+    public Mono<Map<String, String>> login(LoginRequest request) {
         return userRepository.findByEmail(request.getEmail())
-                .switchIfEmpty(Mono.error(new RuntimeException("Invalid email or password")))
+                .switchIfEmpty(Mono.error(new RuntimeException("Invalid credentials")))
                 .flatMap(user -> {
                     if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                        return Mono.error(new RuntimeException("Invalid email or password"));
+                        return Mono.error(new RuntimeException("Invalid credentials"));
                     }
                     
-                    String token = jwtService.generateToken(user.getEmail(), user.getRole());
-                    return Mono.just(UserInfo.builder()
-                            .email(user.getEmail())
-                            .firstName(user.getFirstName())
-                            .lastName(user.getLastName())
-                            .token(token)
-                            .role(user.getRole())
-                            .build());
+                    // ← ADD PASSWORD EXPIRY CHECK HERE
+                    if (user.getLastPasswordChange() != null) {
+                        log.info("reaching here ++++++++++++++++++++");
+                        LocalDateTime expiryDate = user.getLastPasswordChange().plusDays(30);
+                        if (LocalDateTime.now().isAfter(expiryDate)) {
+                            log.warn("Password expired for user: {}", user.getEmail());
+                            return Mono.error(new RuntimeException("Password has expired. Please reset your password"));
+                        }
+                    }
+                    
+                    String token = jwtService.generateToken(
+                        user.getEmail(), 
+                        user.getRole(),
+                        user.getLastPasswordChange()
+                    );
+                    
+                    Map<String, String> response = new HashMap<>();
+                    response.put("token", token);
+                    response.put("email", user.getEmail());
+                    response.put("role", user.getRole());
+                    response.put("firstname", user.getFirstName());
+                    response.put("lastname", user.getLastName());
+                    
+                    log.info("User logged in successfully: {}", user.getEmail());
+                    return Mono.just(response);
                 });
     }
+
+
     
     public Mono<AuthResponse> getUserInfo(String email) {
         return userRepository.findByEmail(email)
@@ -111,6 +133,7 @@ public class AuthService {
                 // Update password (hash the new one)
                 user.setPassword(passwordEncoder.encode(newPassword));
                 user.setUpdatedAt(LocalDateTime.now());
+                user.setLastPasswordChange(LocalDateTime.now());
                 
                 return userRepository.save(user)
                     .map(savedUser -> {
@@ -119,6 +142,41 @@ public class AuthService {
                     });
             });
     }
+    
+    public Mono<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+
+    public Mono<Map<String, String>> resetPasswordWithCredentials(PasswordResetRequest request) {
+    return userRepository.findByEmail(request.getEmail())
+            .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+            .flatMap(user -> {
+                // Verify current password
+                if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                    return Mono.error(new RuntimeException("Current password is incorrect"));
+                }
+                
+                // Check if new password is same as old
+                if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+                    return Mono.error(new RuntimeException("New password must be different from current password"));
+                }
+                
+                // Update password and lastPasswordChange
+                user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+                user.setLastPasswordChange(LocalDateTime.now());
+                user.setUpdatedAt(LocalDateTime.now());
+                
+                return userRepository.save(user)
+                        .map(savedUser -> {
+                            Map<String, String> response = new HashMap<>();
+                            response.put("message", "Password reset successfully");
+                            log.info("Password reset successfully for user: {}", user.getEmail());
+                            return response;
+                        });
+            });
+}
+
 
     
 }

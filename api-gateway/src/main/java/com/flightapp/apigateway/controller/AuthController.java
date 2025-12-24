@@ -3,12 +3,15 @@ package com.flightapp.apigateway.controller;
 import com.flightapp.apigateway.dto.AuthResponse;
 import com.flightapp.apigateway.dto.ChangePasswordRequest;
 import com.flightapp.apigateway.dto.LoginRequest;
+import com.flightapp.apigateway.dto.PasswordResetRequest;
 import com.flightapp.apigateway.dto.RegisterRequest;
 import com.flightapp.apigateway.service.AuthService;
 import com.flightapp.apigateway.service.JwtService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
@@ -87,20 +90,20 @@ public class AuthController {
                             .body(errorResponse));
                 });
     }
-    
     @PostMapping("/login")
     public Mono<ResponseEntity<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login request received for email: {}", request.getEmail());
         
         return authService.login(request)
                 .flatMap(userInfo -> {
-                    ResponseCookie cookie = createCookie(userInfo.getToken());
+                    // ← FIX: Use .get("token") instead of .getToken()
+                    ResponseCookie cookie = createCookie(userInfo.get("token"));
                     
                     AuthResponse response = AuthResponse.builder()
-                            .email(userInfo.getEmail())
-                            .firstName(userInfo.getFirstName()) 
-                            .lastName(userInfo.getLastName()) 
-                            .role(userInfo.getRole())
+                            .email(userInfo.get("email"))           // ← Use .get()
+                            .firstName(userInfo.get("firstname"))   // ← Use .get()
+                            .lastName(userInfo.get("lastname"))     // ← Use .get()
+                            .role(userInfo.get("role"))             // ← Use .get()
                             .message("Login successful")
                             .build();
                     
@@ -120,6 +123,7 @@ public class AuthController {
                             .body(errorResponse));
                 });
     }
+
     
     @PostMapping("/logout")
     public Mono<ResponseEntity<AuthResponse>> logout() {
@@ -196,13 +200,45 @@ public class AuthController {
         
         log.info("Password change request for user: {}", email);
         
-        return authService.changePassword(email, request.getCurrentPassword(), request.getNewPassword())
-            .map(success -> success 
-                ? ResponseEntity.ok(Map.of("message", "Password changed successfully"))
-                : ResponseEntity.badRequest().body(Map.of("message", "Current password is incorrect")))
-            .onErrorReturn(ResponseEntity.internalServerError()
-                .body(Map.of("message", "Password change failed")));
+        final String userEmail = email;  // ← ADD THIS: Make final for lambda
+        
+        // Call changePassword service
+        return authService.changePassword(userEmail, request.getCurrentPassword(), request.getNewPassword())
+            .flatMap(success -> {  // ← CHANGED from .map to .flatMap
+                if (!success) {
+                    return Mono.just(ResponseEntity.badRequest()
+                        .body(Map.of("message", "Current password is incorrect")));
+                }
+                
+                // Password changed - get updated user and generate new token
+                return authService.getUserByEmail(userEmail)  // ← ADD THIS: Fetch updated user
+                    .map(user -> {  // ← ADD THIS: Generate new token
+                        String newToken = jwtService.generateToken(
+                            user.getEmail(), 
+                            user.getRole(), 
+                            user.getLastPasswordChange()
+                        );
+                        
+                        ResponseCookie cookie = createCookie(newToken);
+                        
+                        Map<String, String> responseBody = new HashMap<>();
+                        responseBody.put("message", "Password changed successfully");
+                        responseBody.put("token", newToken);
+                        
+                        return ResponseEntity.ok()
+                            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                            .body(responseBody);
+                    })
+                    .defaultIfEmpty(ResponseEntity.internalServerError()
+                        .body(Map.of("message", "Failed to retrieve user data")));
+            })
+            .onErrorResume(error -> {  // ← CHANGED from onErrorReturn
+                log.error("Password change error: {}", error.getMessage());
+                return Mono.just(ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Password change failed: " + error.getMessage())));
+            });
     }
+
 
     private String extractEmailFromCookie(ServerHttpRequest request) {
         try {
@@ -271,4 +307,23 @@ public class AuthController {
         HttpCookie cookie = request.getCookies().getFirst(cookieName);
         return cookie != null ? cookie.getValue() : null;
     }
+
+    @PatchMapping("/password-reset")
+    public Mono<ResponseEntity<Map<String, String>>> resetPasswordWithCredentials(
+            @Valid @RequestBody PasswordResetRequest request) {
+        log.info("Password reset request for email: {}", request.getEmail());
+        
+        return authService.resetPasswordWithCredentials(request)
+                .map(response -> ResponseEntity.ok(response))
+                .onErrorResume(e -> {
+                    log.error("Password reset failed: {}", e.getMessage());
+                    Map<String, String> errorResponse = new HashMap<>();
+                    errorResponse.put("message", e.getMessage());
+                    return Mono.just(ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body(errorResponse));
+                });
+    }
+
+
 }

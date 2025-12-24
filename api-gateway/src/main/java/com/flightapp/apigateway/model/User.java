@@ -1,9 +1,11 @@
 package com.flightapp.apigateway.model;
 
+import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Document(collection = "users")
@@ -21,7 +23,18 @@ public class User {
     private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private LocalDateTime lastPasswordChange;
+
+
+    public LocalDateTime getLastPasswordChange() {
+        return lastPasswordChange;
+    }
     
+    public void setLastPasswordChange(LocalDateTime lastPasswordChange) {
+        this.lastPasswordChange = lastPasswordChange;
+    }
+
     public User() {
     }
     
@@ -103,6 +116,7 @@ public class User {
     
     public static Builder builder() {
         return new Builder();
+
     }
     
     public static class Builder {
@@ -114,7 +128,14 @@ public class User {
         private String role;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private LocalDateTime lastPasswordChange;
         
+        public Builder lastPasswordChange(LocalDateTime lastPasswordChange) {
+            this.lastPasswordChange = lastPasswordChange;
+            return this;
+        }
+
+
         public Builder id(String id) {
             this.id = id;
             return this;
@@ -154,9 +175,12 @@ public class User {
             this.updatedAt = updatedAt;
             return this;
         }
-        
+
+
         public User build() {
-            return new User(id, email, password, firstName, lastName, role, createdAt, updatedAt);
+            User user = new User(id, email, password, firstName, lastName, role, createdAt, updatedAt);
+            user.setLastPasswordChange(lastPasswordChange);
+            return user;
         }
     }
 }
