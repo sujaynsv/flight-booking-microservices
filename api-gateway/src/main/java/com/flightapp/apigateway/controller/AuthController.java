@@ -2,9 +2,11 @@ package com.flightapp.apigateway.controller;
 
 import com.flightapp.apigateway.dto.AuthResponse;
 import com.flightapp.apigateway.dto.ChangePasswordRequest;
+import com.flightapp.apigateway.dto.ForgotPasswordRequest;
 import com.flightapp.apigateway.dto.LoginRequest;
 import com.flightapp.apigateway.dto.PasswordResetRequest;
 import com.flightapp.apigateway.dto.RegisterRequest;
+import com.flightapp.apigateway.dto.ResetPasswordRequest;
 import com.flightapp.apigateway.service.AuthService;
 import com.flightapp.apigateway.service.JwtService;
 import jakarta.validation.Valid;
@@ -29,8 +31,7 @@ import java.util.Map;
 
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
-
-
+import com.flightapp.apigateway.service.PasswordResetService;
 import java.time.Duration;
 
 @RestController
@@ -44,6 +45,7 @@ public class AuthController {
     
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     
+    private final PasswordResetService passwordResetService ;
     private final AuthService authService;
     private final JwtService jwtService;
     
@@ -53,10 +55,11 @@ public class AuthController {
     @Value("${jwt.cookie.max-age}")
     private Long cookieMaxAge;
     
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService, JwtService jwtService, PasswordResetService passwordResetService) {
         this.authService = authService;
         this.jwtService = jwtService;
-    }
+        this.passwordResetService=passwordResetService;
+    }   
     
     @PostMapping("/register")
     public Mono<ResponseEntity<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
@@ -323,6 +326,26 @@ public class AuthController {
                             .status(HttpStatus.BAD_REQUEST)
                             .body(errorResponse));
                 });
+    }
+
+        @PostMapping("/forgot-password")
+    public Mono<ResponseEntity<Map<String, String>>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return passwordResetService.forgotPassword(request)
+                .map(message -> ResponseEntity.ok(Map.of("message", message)))
+                .onErrorResume(error -> Mono.just(
+                    ResponseEntity.badRequest()
+                        .body(Map.of("error", error.getMessage()))
+                ));
+    }
+    
+    @PostMapping("/reset-password")
+    public Mono<ResponseEntity<Map<String, String>>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return passwordResetService.resetPassword(request)
+                .map(message -> ResponseEntity.ok(Map.of("message", message)))
+                .onErrorResume(error -> Mono.just(
+                    ResponseEntity.badRequest()
+                        .body(Map.of("error", error.getMessage()))
+                ));
     }
 
 
