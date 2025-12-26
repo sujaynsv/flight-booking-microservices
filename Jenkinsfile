@@ -2,12 +2,13 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven 3.9.6'  
+        maven 'Maven_3.9.6'  
     }
     
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         DOCKER_HUB_USERNAME = 'sujaynsv'
+        PATH = "/usr/local/bin:${env.PATH}"  
     }
     
     stages {
@@ -22,7 +23,7 @@ pipeline {
             steps {
                 echo 'Building JAR files...'
                 dir('api-gateway') {
-                    sh 'mvn clean package -DskipTests'  
+                    sh 'mvn clean package -DskipTests'
                 }
                 dir('flights-service') {
                     sh 'mvn clean package -DskipTests'
@@ -40,10 +41,10 @@ pipeline {
             steps {
                 echo 'Building Docker images...'
                 script {
-                    sh 'docker build -t ${DOCKER_HUB_USERNAME}/api-gateway:latest ./api-gateway'
-                    sh 'docker build -t ${DOCKER_HUB_USERNAME}/flight-service:latest ./flight-service'
-                    sh 'docker build -t ${DOCKER_HUB_USERNAME}/booking-service:latest ./booking-service'
-                    sh 'docker build -t ${DOCKER_HUB_USERNAME}/email-service:latest ./email-service'
+                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/api-gateway:latest ./api-gateway'
+                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/flights-service:latest ./flights-service'
+                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/bookings-service:latest ./bookings-service'
+                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/email-service:latest ./email-service'
                 }
             }
         }
@@ -52,11 +53,11 @@ pipeline {
             steps {
                 echo 'Pushing images to Docker Hub...'
                 script {
-                    sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin'
-                    sh 'docker push ${DOCKER_HUB_USERNAME}/api-gateway:latest'
-                    sh 'docker push ${DOCKER_HUB_USERNAME}/flight-service:latest'
-                    sh 'docker push ${DOCKER_HUB_USERNAME}/booking-service:latest'
-                    sh 'docker push ${DOCKER_HUB_USERNAME}/email-service:latest'
+                    sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | /usr/local/bin/docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin'
+                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/api-gateway:latest'
+                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/flights-service:latest'
+                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/bookings-service:latest'
+                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/email-service:latest'
                 }
             }
         }
@@ -64,7 +65,7 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up...'
-                sh 'docker logout'
+                sh '/usr/local/bin/docker logout'
             }
         }
     }
