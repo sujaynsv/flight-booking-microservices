@@ -1,9 +1,13 @@
 pipeline {
     agent any
     
+    tools {
+        maven 'Maven 3.9.6'  // You'll need to configure this in Jenkins
+    }
+    
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_HUB_USERNAME = 'sujaynsv'  
+        DOCKER_HUB_USERNAME = 'sujaynsv'
     }
     
     stages {
@@ -18,16 +22,16 @@ pipeline {
             steps {
                 echo 'Building JAR files...'
                 dir('api-gateway') {
-                    sh './mvnw clean package -DskipTests'
+                    sh 'mvn clean package -DskipTests'  // ← Changed from ./mvnw to mvn
                 }
                 dir('flight-service') {
-                    sh './mvnw clean package -DskipTests'
+                    sh 'mvn clean package -DskipTests'
                 }
                 dir('booking-service') {
-                    sh './mvnw clean package -DskipTests'
+                    sh 'mvn clean package -DskipTests'
                 }
                 dir('email-service') {
-                    sh './mvnw clean package -DskipTests'
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
