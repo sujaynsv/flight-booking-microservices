@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven 3.9.6'  // You'll need to configure this in Jenkins
+        maven 'Maven 3.9.6'  
     }
     
     environment {
@@ -22,15 +22,15 @@ pipeline {
             steps {
                 echo 'Building JAR files...'
                 dir('api-gateway') {
-                    sh 'mvn clean package -DskipTests'  // ← Changed from ./mvnw to mvn
+                    sh 'mvn clean package -DskipTests'  
                 }
-                dir('flight-service') {
+                dir('flights-service') {
                     sh 'mvn clean package -DskipTests'
                 }
-                dir('booking-service') {
+                dir('bookings-service') {
                     sh 'mvn clean package -DskipTests'
                 }
-                dir('email-service') {
+                dir('emails-service') {
                     sh 'mvn clean package -DskipTests'
                 }
             }
