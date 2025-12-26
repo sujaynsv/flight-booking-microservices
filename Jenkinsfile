@@ -2,13 +2,13 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven 3.9.6'  
+        maven 'Maven_3.9.6'
     }
     
     environment {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         DOCKER_HUB_USERNAME = 'sujaynsv'
-        PATH = "/usr/local/bin:${env.PATH}"  
+        PATH = "/usr/local/bin:${env.PATH}"
     }
     
     stages {
@@ -23,49 +23,46 @@ pipeline {
             steps {
                 echo 'Building JAR files...'
                 dir('api-gateway') {
-                    sh 'mvn clean package -DskipTests'
+                    sh 'mvn package -DskipTests'
                 }
                 dir('flights-service') {
-                    sh 'mvn clean package -DskipTests'
+                    sh 'mvn package -DskipTests'
                 }
                 dir('bookings-service') {
-                    sh 'mvn clean package -DskipTests'
+                    sh 'mvn package -DskipTests'
                 }
                 dir('email-service') {
-                    sh 'mvn clean package -DskipTests'
+                    sh 'mvn package -DskipTests'
+                }
+                dir('eureka-server') {
+                    sh 'mvn package -DskipTests'
+                }
+                dir('config-server') {
+                    sh 'mvn package -DskipTests'
                 }
             }
         }
         
-        stage('Build Docker Images') {
+        stage('Stop Old Containers') {
             steps {
-                echo 'Building Docker images...'
-                script {
-                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/api-gateway:latest ./api-gateway'
-                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/flights-service:latest ./flights-service'
-                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/bookings-service:latest ./bookings-service'
-                    sh '/usr/local/bin/docker build -t ${DOCKER_HUB_USERNAME}/email-service:latest ./email-service'
-                }
+                echo 'Stopping old containers...'
+                sh '/usr/local/bin/docker-compose down || true'
             }
         }
         
-        stage('Push to Docker Hub') {
+        stage('Build and Start Services') {
             steps {
-                echo 'Pushing images to Docker Hub...'
-                script {
-                    sh 'echo $DOCKER_HUB_CREDENTIALS_PSW | /usr/local/bin/docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin'
-                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/api-gateway:latest'
-                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/flights-service:latest'
-                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/bookings-service:latest'
-                    sh '/usr/local/bin/docker push ${DOCKER_HUB_USERNAME}/email-service:latest'
-                }
+                echo 'Building images and starting services...'
+                sh '/usr/local/bin/docker-compose up -d --build'
             }
         }
         
-        stage('Cleanup') {
+        stage('Verify Deployment') {
             steps {
-                echo 'Cleaning up...'
-                sh '/usr/local/bin/docker logout'
+                echo 'Verifying services are running...'
+                sh 'sleep 30'
+                sh '/usr/local/bin/docker-compose ps'
+                sh '/usr/local/bin/docker ps'
             }
         }
     }
@@ -75,10 +72,12 @@ pipeline {
             echo 'Pipeline completed!'
         }
         success {
-            echo 'Pipeline succeeded!'
+            echo 'Pipeline succeeded! Services are running.'
+            sh '/usr/local/bin/docker-compose ps'
         }
         failure {
             echo 'Pipeline failed!'
+            sh '/usr/local/bin/docker-compose logs --tail=50'
         }
     }
 }
