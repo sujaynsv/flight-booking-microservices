@@ -30,7 +30,7 @@ pipeline {
                 dir('bookings-service') {
                     sh 'mvn clean package -DskipTests'
                 }
-                dir('emails-service') {
+                dir('email-service') {
                     sh 'mvn clean package -DskipTests'
                 }
             }
