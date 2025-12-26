@@ -1,11 +1,9 @@
 package com.flightapp.apigateway.model;
 
-import org.springframework.cglib.core.Local;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Document(collection = "users")
@@ -23,23 +21,22 @@ public class User {
     private String role;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     private LocalDateTime lastPasswordChange;
-
-
-    public LocalDateTime getLastPasswordChange() {
-        return lastPasswordChange;
-    }
     
-    public void setLastPasswordChange(LocalDateTime lastPasswordChange) {
-        this.lastPasswordChange = lastPasswordChange;
-    }
+    // Account lockout fields
+    private Integer failedLoginAttempts = 0;
+    private LocalDateTime accountLockedUntil;
+    private Boolean accountLocked = false;
 
+    // Constructors
     public User() {
     }
     
     public User(String id, String email, String password, String firstName, 
-                String lastName, String role, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                String lastName, String role, LocalDateTime createdAt, 
+                LocalDateTime updatedAt, LocalDateTime lastPasswordChange,
+                Integer failedLoginAttempts, LocalDateTime accountLockedUntil, 
+                Boolean accountLocked) {
         this.id = id;
         this.email = email;
         this.password = password;
@@ -48,8 +45,13 @@ public class User {
         this.role = role;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.lastPasswordChange = lastPasswordChange;
+        this.failedLoginAttempts = failedLoginAttempts;
+        this.accountLockedUntil = accountLockedUntil;
+        this.accountLocked = accountLocked;
     }
     
+    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -114,9 +116,42 @@ public class User {
         this.updatedAt = updatedAt;
     }
     
+    public LocalDateTime getLastPasswordChange() {
+        return lastPasswordChange;
+    }
+    
+    public void setLastPasswordChange(LocalDateTime lastPasswordChange) {
+        this.lastPasswordChange = lastPasswordChange;
+    }
+    
+    // Account lockout getters and setters
+    public Integer getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+    
+    public void setFailedLoginAttempts(Integer failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
+    }
+    
+    public LocalDateTime getAccountLockedUntil() {
+        return accountLockedUntil;
+    }
+    
+    public void setAccountLockedUntil(LocalDateTime accountLockedUntil) {
+        this.accountLockedUntil = accountLockedUntil;
+    }
+    
+    public Boolean getAccountLocked() {
+        return accountLocked;
+    }
+    
+    public void setAccountLocked(Boolean accountLocked) {
+        this.accountLocked = accountLocked;
+    }
+    
+    // Builder
     public static Builder builder() {
         return new Builder();
-
     }
     
     public static class Builder {
@@ -129,13 +164,10 @@ public class User {
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private LocalDateTime lastPasswordChange;
+        private Integer failedLoginAttempts = 0;
+        private LocalDateTime accountLockedUntil;
+        private Boolean accountLocked = false;
         
-        public Builder lastPasswordChange(LocalDateTime lastPasswordChange) {
-            this.lastPasswordChange = lastPasswordChange;
-            return this;
-        }
-
-
         public Builder id(String id) {
             this.id = id;
             return this;
@@ -175,12 +207,42 @@ public class User {
             this.updatedAt = updatedAt;
             return this;
         }
-
-
+        
+        public Builder lastPasswordChange(LocalDateTime lastPasswordChange) {
+            this.lastPasswordChange = lastPasswordChange;
+            return this;
+        }
+        
+        public Builder failedLoginAttempts(Integer failedLoginAttempts) {
+            this.failedLoginAttempts = failedLoginAttempts;
+            return this;
+        }
+        
+        public Builder accountLockedUntil(LocalDateTime accountLockedUntil) {
+            this.accountLockedUntil = accountLockedUntil;
+            return this;
+        }
+        
+        public Builder accountLocked(Boolean accountLocked) {
+            this.accountLocked = accountLocked;
+            return this;
+        }
+        
         public User build() {
-            User user = new User(id, email, password, firstName, lastName, role, createdAt, updatedAt);
-            user.setLastPasswordChange(lastPasswordChange);
-            return user;
+            return new User(
+                id, 
+                email, 
+                password, 
+                firstName, 
+                lastName, 
+                role, 
+                createdAt, 
+                updatedAt,
+                lastPasswordChange,
+                failedLoginAttempts,
+                accountLockedUntil,
+                accountLocked
+            );
         }
     }
 }

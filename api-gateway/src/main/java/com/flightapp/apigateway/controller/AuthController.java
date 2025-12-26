@@ -99,14 +99,14 @@ public class AuthController {
         
         return authService.login(request)
                 .flatMap(userInfo -> {
-                    // ← FIX: Use .get("token") instead of .getToken()
+     
                     ResponseCookie cookie = createCookie(userInfo.get("token"));
                     
                     AuthResponse response = AuthResponse.builder()
-                            .email(userInfo.get("email"))           // ← Use .get()
-                            .firstName(userInfo.get("firstname"))   // ← Use .get()
-                            .lastName(userInfo.get("lastname"))     // ← Use .get()
-                            .role(userInfo.get("role"))             // ← Use .get()
+                            .email(userInfo.get("email"))         
+                            .firstName(userInfo.get("firstname"))   
+                            .lastName(userInfo.get("lastname"))   
+                            .role(userInfo.get("role"))            
                             .message("Login successful")
                             .build();
                     
@@ -347,6 +347,42 @@ public class AuthController {
                         .body(Map.of("error", error.getMessage()))
                 ));
     }
+
+    // @PostMapping("/reset-password-credentials")
+    // public Mono<ResponseEntity<Map<String, String>>> resetPasswordWithCredentialsNewToken(
+    //         @Valid @RequestBody PasswordResetRequest request) {
+    //     log.info("Password reset (with new token) for email: {}", request.getEmail());
+        
+    //     return authService.resetPasswordWithCredentials(request)
+    //             .flatMap(response -> {
+    //                 // After successful password reset, generate NEW token
+    //                 return authService.getUserByEmail(request.getEmail())
+    //                     .map(user -> {
+    //                         String newToken = jwtService.generateToken(
+    //                             user.getEmail(), 
+    //                             user.getRole(), 
+    //                             user.getLastPasswordChange()
+    //                         );
+                            
+    //                         ResponseCookie cookie = createCookie(newToken);
+                            
+    //                         Map<String, String> responseBody = new HashMap<>();
+    //                         responseBody.put("message", "Password reset successfully");
+    //                         responseBody.put("token", newToken);
+                            
+    //                         return ResponseEntity.ok()
+    //                             .header(HttpHeaders.SET_COOKIE, cookie.toString())
+    //                             .body(responseBody);
+    //                     });
+    //             })
+    //             .onErrorResume(e -> {
+    //                 log.error("Password reset failed: {}", e.getMessage());
+    //                 return Mono.just(ResponseEntity
+    //                         .status(HttpStatus.BAD_REQUEST)
+    //                         .body(Map.of("error", e.getMessage())));
+    //             });
+    // }
+
 
 
 }
