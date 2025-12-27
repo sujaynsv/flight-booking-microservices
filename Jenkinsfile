@@ -9,8 +9,8 @@ pipeline {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         DOCKER_HUB_USERNAME = 'sujaynsv'
         PATH = "/usr/local/bin:${env.PATH}"
-        SONAR_ORG="sujaynsv"
-        SONAR_TOKEN=4084cc84bb3dcf9b38adc9446ddacb2148fcade9
+        SONAR_ORG='sujaynsv'
+        SONAR_TOKEN='4084cc84bb3dcf9b38adc9446ddacb2148fcade9'
     }
     
     stages {
@@ -21,12 +21,12 @@ pipeline {
             }
         }
 
-    stage('SonarCloud Analysis') {
-        steps {
-            echo 'SonarCloud Report'
+        stage('SonarCloud Analysis') {
+            steps {
+                echo 'SonarCloud Report'
                 sh """
                     mvn sonar:sonar \
-                      -Dsonar.projectKey=${SONAR_ORG}/flight-booking-microservices \
+                      -Dsonar.projectKey=${SONAR_ORG}_flight-booking-microservices \
                       -Dsonar.organization=${SONAR_ORG} \
                       -Dsonar.host.url=https://sonarcloud.io \
                       -Dsonar.token=${SONAR_TOKEN}
@@ -38,7 +38,6 @@ pipeline {
             steps {
                 echo 'Building JAR files'
                 sh 'mvn package -DskipTests'
-
             }
         }
         
@@ -68,15 +67,24 @@ pipeline {
     
     post {
         always {
-            echo 'Pipeline completed!'
+            echo '=== Pipeline Completed ==='
         }
         success {
-            echo 'Pipeline succeeded! Services are running.'
-            sh '/usr/local/bin/docker-compose ps'
+            script {
+                echo 'Pipeline succeeded!'
+                echo 'SonarCloud: https://sonarcloud.io/organizations/sujaynsv/projects'
+                sh '/usr/local/bin/docker-compose ps'
+            }
         }
         failure {
-            echo 'Pipeline failed!'
-            sh '/usr/local/bin/docker-compose logs --tail=50'
+            script {
+                echo 'Pipeline failed!'
+                try {
+                    sh '/usr/local/bin/docker-compose logs --tail=50'
+                } catch (Exception e) {
+                    echo 'Could not fetch docker-compose logs'
+                }
+            }
         }
     }
 }
