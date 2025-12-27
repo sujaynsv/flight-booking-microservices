@@ -14,7 +14,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out code...'
+                echo 'Checking out code'
                 checkout scm
             }
         }
@@ -59,8 +59,8 @@ pipeline {
         
         stage('Verify Deployment') {
             steps {
-                echo 'Verifying services are running...'
-                sh 'sleep 30'
+                echo 'Verifying services are running'
+                sh 'sleep 10'
                 sh '/usr/local/bin/docker-compose ps'
                 sh '/usr/local/bin/docker ps'
             }
