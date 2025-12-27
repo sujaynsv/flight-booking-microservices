@@ -9,6 +9,8 @@ pipeline {
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         DOCKER_HUB_USERNAME = 'sujaynsv'
         PATH = "/usr/local/bin:${env.PATH}"
+        SONAR_ORG="sujaynsv"
+        SONAR_TOKEN=4084cc84bb3dcf9b38adc9446ddacb2148fcade9
     }
     
     stages {
@@ -18,28 +20,25 @@ pipeline {
                 checkout scm
             }
         }
+
+    stage('SonarCloud Analysis') {
+        steps {
+            echo 'SonarCloud Report'
+                sh """
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=${SONAR_ORG}/flight-booking-microservices \
+                      -Dsonar.organization=${SONAR_ORG} \
+                      -Dsonar.host.url=https://sonarcloud.io \
+                      -Dsonar.token=${SONAR_TOKEN}
+                """
+            }
+        }
         
         stage('Build JARs') {
             steps {
-                echo 'Building JAR files...'
-                dir('api-gateway') {
-                    sh 'mvn package -DskipTests'
-                }
-                dir('flights-service') {
-                    sh 'mvn package -DskipTests'
-                }
-                dir('bookings-service') {
-                    sh 'mvn package -DskipTests'
-                }
-                dir('email-service') {
-                    sh 'mvn package -DskipTests'
-                }
-                dir('eureka-server') {
-                    sh 'mvn package -DskipTests'
-                }
-                dir('config-server') {
-                    sh 'mvn package -DskipTests'
-                }
+                echo 'Building JAR files'
+                sh 'mvn package -DskipTests'
+
             }
         }
         
